@@ -1,0 +1,9 @@
+[project]
+name = "typsa"
+version = "0.1.0"
+description = "A strongly-typed PyPSA wrapper."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pypsa>=1.0.7",
+]
