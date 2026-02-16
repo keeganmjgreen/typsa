@@ -12,5 +12,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "datamodel-code-generator>=0.53,<0.54", # Pin until stable.
+    "mkdocstrings-python>=2,<3",
     "ruff>=0.15,<0.16",                     # Pin until stable.
+    "zensical>=0.0,<0.1",                   # Pin until stable.
 ]

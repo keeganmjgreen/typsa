@@ -304,6 +304,24 @@ def _process_component(
     _run_subprocess(args=["ruff", "check", "--fix", str(py_file_out)])
     _run_subprocess(args=["ruff", "check", "--select=I", "--fix", str(py_file_out)])
 
+    members = [to_pascal(name)]
+    if len(static_results_json_schema.properties) > 0:
+        members.append(static_results_class_name)
+    if len(dynamic_results_json_schema.properties) > 0:
+        members.append(dynamic_results_class_name)
+    Path("docs", "components", f"{name}.md").write_text(
+        f"""::: components.{name}
+    options:
+      inherited_members: false
+      members_order: source
+      show_labels: false
+      show_root_toc_entry: false
+      show_signature_annotations: true
+      show_source: false
+      members: {members}
+"""
+    )
+
 
 def main() -> None:
     root = pypsa.__file__.removesuffix("__init__.py")
