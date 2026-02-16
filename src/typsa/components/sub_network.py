@@ -2,19 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from dataclasses import dataclass
 
-from ._base_component import BaseComponent, BaseStaticResults
-
-
-class SubNetwork(BaseComponent):
-    """Subsets of buses and passive branches (i.e. lines and transformers) that are connected (i.e. synchronous areas).
-
-    [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/sub_networks/)
-    """
-
-    class_name: Literal["SubNetwork"] = "SubNetwork"  # type: ignore
-
+from ._base_component import BaseResults, BaseStaticResults
 
 
 class SubNetworkStaticResults(BaseStaticResults):
@@ -26,3 +16,8 @@ class SubNetworkStaticResults(BaseStaticResults):
 
     slack_bus: str
     """Name of slack bus."""
+
+
+@dataclass(repr=False)
+class SubNetworkResults(BaseResults):
+    static: dict[str, SubNetworkStaticResults]
