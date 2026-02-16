@@ -1,12 +1,43 @@
 {
+    "[markdown]": {
+        "editor.formatOnSave": false,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "never",
+            "source.organizeImports": "never"
+        },
+    },
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
     "cSpell.words": [
+        "annuitized",
+        "arithmatex",
+        "codegen",
+        "datamodel",
+        "Docstrings",
+        "elec",
+        "electrolyser",
+        "HVDC",
+        "javascripts",
+        "katex",
+        "Keegan",
+        "linearised",
+        "mathjax",
+        "mkdocs",
+        "mkdocstrings",
+        "optimisation",
+        "Optimised",
+        "periodized",
         "pycache",
+        "pydantic",
+        "pymdownx",
         "pypsa",
+        "superfences",
+        "susceptance",
         "typsa",
         "venv",
+        "visualisations",
+        "zensical"
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
