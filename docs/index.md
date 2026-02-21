@@ -20,6 +20,8 @@ TyPSA provides:
 
 Working with TyPSA should feel very familiar to PyPSA users. See the below comparison of PyPSA versus TyPSA usage.
 
+Example from [PyPSA Quickstart 1 &ndash; Markets](https://docs.pypsa.org/latest/examples/example-1/).
+
 <div class="grid cards" markdown>
 
 <div>
