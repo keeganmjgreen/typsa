@@ -1,13 +1,19 @@
-# TyPSA
+---
+title: TyPSA
+---
+
+<div style="text-align: center; margin-right: 15px;"><img src="logo/typsa_logo.svg"></img></div>
+
+<h1 style="text-align: center;">TyPSA</h1>
 
 TyPSA is a wrapper around the [PyPSA Python library for power systems analysis](https://docs.pypsa.org/latest/). TyPSA adds strong typing and data validation to PyPSA.
 
-PyPSA is used for optimizing and simulating power grids. PyPSA provides a `pypsa.Network` object, which consists of a grid model. PyPSA has several types of components (bus, load, etc.) that can be added to a `pypsa.Network` object. For a given component type, PyPSA has many data attributes (as many as 50). Each of these data attributes are either inputs to the `pypsa.Network` and its underlying model, or an output thereof. Furthermore, each data attribute can be static (time invariant) or dynamic (time varying).
+PyPSA is used for optimizing and simulating power grids. PyPSA provides a `pypsa.Network` object, which consists of a grid model. PyPSA has several types of components (bus, load, etc.) that can be added to a `pypsa.Network` object. For a given component type, PyPSA has many data attributes. Each of these data attributes are either inputs to the `pypsa.Network` and its underlying model, or an output thereof. Furthermore, each data attribute can be static (time invariant) or dynamic (time varying).
 
 TyPSA provides:
 
-- Classes for defining components of different types (`Bus`, `Load`, etc.) with their input data.
-- A subclass of `pypsa.Network` &mdash; `typsa.Network` &mdash; to which components can be added.
+- Classes for defining [components](components/index.md) of different types ([`Bus`](components/bus.md), [`Load`](components/load.md), etc.) with their input data.
+- A subclass of `pypsa.Network` &mdash; [`typsa.Network`](network.md) &mdash; to which components can be added. Optimizations and power flow simulations can be run using `typsa.Network.optimize()`, `typsa.Network.pf()`, etc.
 - Accessors for obtaining static and dynamic model outputs (e.g., `typsa.Network.static_results.extendable_generators["g1"].p_nom_opt`).
 
 ## Comparison
@@ -223,18 +229,22 @@ Using PyPSA, one often needs to consult the documentation to know:
 - What are the types, valid values, and defaults for each attribute.
 - Which attributes are compatible with each other.
 
-With TyPSA, `typsa.components` lists available components. Each component class lists its attributes, and their types, validation, and defaults. Different subclasses are used to separate attributes of a given component type that are not compatible with each other. For example, the `Generator` class has the `p_nom` attribute, but `ExtendableGenerator` does not.
+With TyPSA, `typsa.components` lists available components. Each component class lists its attributes, and their types, validation, and defaults. Different subclasses are used to separate attributes of a given component type that are not compatible with each other. For example, the [`ExtendableLine`](components/line.md#components.line.ExtendableLine) class has the [`s_nom_mod`](components/line.md#components.line.ExtendableLine.s_nom_mod) attribute, but [`Line`](components/line.md#components.line.Line) does not. Similarly, on the output side, [`ExtendableLineStaticResults`](components/line.md#components.line.ExtendableLineStaticResults) has [`s_nom_opt`](components/line.md#components.line.ExtendableLineStaticResults.s_nom_opt), but [`LineStaticResults`](components/line.md#components.line.LineStaticResults) does not.
 
 ## Benefits of TyPSA
 
-- IDE autocomplete of which components are available, each with a description and a link to PyPSA's official documentation:
+IDE autocomplete of which components are available, each with a description and a link to PyPSA's official documentation:
 
-  ![](img/import_autocomplete.png)
+![](screenshots/import_autocomplete.png)
 
-- IDE autocomplete of which attributes a component has, each with a detailed description:
+IDE autocomplete and type checking of component attributes:
 
-  ![](img/argument_docstring.png)
+![](screenshots/argument_docstring.png)
 
-- IDE type checking support.
+![](screenshots/argument_type_checking.png)
 
-- Runtime data validation.
+IDE autocomplete of available results:
+
+![](screenshots/results_autocomplete.png)
+
+![](screenshots/result_autocomplete.png)

@@ -1,4 +1,6 @@
-# Results
+# Network Results
+
+## API Reference
 
 ::: network
     options:
@@ -7,4 +9,4 @@
       show_root_toc_entry: false
       show_signature_annotations: true
       show_source: false
-      members: ['StaticResults', 'DynamicResults']
+      members: ['NetworkStaticResults', 'NetworkDynamicResults']

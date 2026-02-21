@@ -1,14 +1,14 @@
 # Generator
 
-Use the `Generator` class to represent a power generator with a given active power capacity (`p_nom`), in order to optimize its active power over time (`GeneratorDynamicResults.p`).
+Use the [`Generator`](#components.generator.Generator) class to represent a power generator with a given active power capacity ([`p_nom`](#components.generator.Generator.p_nom)), in order to optimize its active power over time ([`GeneratorDynamicResults.p`](#components.generator.GeneratorDynamicResults.p)).
 
-Use the `ExtendableGenerator` class to represent a hypothetical generator with an active power capacity that is flexible, in order to also optimize the active power capacity (`ExtendableGeneratorStaticResults.p_nom_opt`).
+Use the [`ExtendableGenerator`](#components.generator.ExtendableGenerator) class to represent a hypothetical generator with an active power capacity that is flexible, in order to also optimize the active power capacity ([`ExtendableGeneratorStaticResults.p_nom_opt`](#components.generator.ExtendableGeneratorStaticResults.p_nom_opt)).
 
-Use the `CommittableGenerator` class to represent a generator with unit commitment (start-up and shut-down) constraints, in order to also optimize when the generator is operating (`CommittableGeneratorDynamicResults.status`).
+Use the [`CommittableGenerator`](#components.generator.CommittableGenerator) class to represent a generator with unit commitment (start-up and shut-down) constraints, in order to also optimize when the generator is operating ([`CommittableGeneratorDynamicResults.status`](#components.generator.CommittableGeneratorDynamicResults.status)).
 
 ## API Reference
 
-`Generator`, `ExtendableGenerator`, and `CommittableGenerator` all inherit from the `BaseGenerator` parent class.
+[`Generator`](#components.generator.Generator), [`ExtendableGenerator`](#components.generator.ExtendableGenerator), and [`CommittableGenerator`](#components.generator.CommittableGenerator) all inherit from the [`BaseGenerator`](#components.generator.BaseGenerator) parent class.
 
 ::: components.generator
     options:

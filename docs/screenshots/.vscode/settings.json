@@ -1,0 +1,10 @@
+{
+    "editor.rulers": [],
+    "zenMode.centerLayout": false,
+    "zenMode.fullScreen": false,
+    "zenMode.showTabs": "none",
+    "editor.renderLineHighlight": "none",
+    "window.title": "TyPSA",
+    "workbench.editor.editorActionsLocation": "hidden",
+    "problems.visibility": false
+}

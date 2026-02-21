@@ -1,12 +1,12 @@
 # Storage Unit
 
-Use the `StorageUnit` class to represent a storage unit with a given active power capacity (`p_nom`), in order to optimize its active power over time (`StorageUnitDynamicResults.p`). The storage unit's energy capacity is determined by its `max_hours` in conjunction with `p_nom`.
+Use the [`StorageUnit`](#components.storage_unit.StorageUnit) class to represent a storage unit with a given active power capacity ([`p_nom`](#components.storage_unit.StorageUnit.p_nom)), in order to optimize its active power over time ([`StorageUnitDynamicResults.p`](#components.storage_unit.StorageUnitDynamicResults.p)). The storage unit's energy capacity is determined by its [`max_hours`](#components.storage_unit.BaseStorageUnit.max_hours) in conjunction with [`p_nom`](#components.storage_unit.StorageUnit.p_nom).
 
-Use the `ExtendableStorageUnit` class to represent a hypothetical storage unit with an active power capacity that is flexible, in order to also optimize the active power capacity (`ExtendableStorageUnitStaticResults.p_nom_opt`).
+Use the [`ExtendableStorageUnit`](#components.storage_unit.ExtendableStorageUnit) class to represent a hypothetical storage unit with an active power capacity that is flexible, in order to also optimize the active power capacity ([`ExtendableStorageUnitStaticResults.p_nom_opt`](#components.storage_unit.ExtendableStorageUnitStaticResults.p_nom_opt)).
 
 ## API Reference
 
-`StorageUnit` and `ExtendableStorageUnit` both inherit from the `BaseStorageUnit` parent class.
+[`StorageUnit`](#components.storage_unit.StorageUnit) and [`ExtendableStorageUnit`](#components.storage_unit.ExtendableStorageUnit) both inherit from the [`BaseStorageUnit`](#components.storage_unit.BaseStorageUnit) parent class.
 
 ::: components.storage_unit
     options:

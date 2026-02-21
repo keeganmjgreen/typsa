@@ -76,17 +76,17 @@ class Network(pypsa.Network):
             self.add_component(component)
 
     @property
-    def static_results(self) -> StaticResults:
+    def static_results(self) -> NetworkStaticResults:
         """Access static optimization and simulation results."""
-        return StaticResults(self)
+        return NetworkStaticResults(self)
 
     @property
-    def dynamic_results(self) -> DynamicResults:
+    def dynamic_results(self) -> NetworkDynamicResults:
         """Access dynamic optimization and simulation results."""
-        return DynamicResults(self)
+        return NetworkDynamicResults(self)
 
 
-class StaticResults:
+class NetworkStaticResults:
     _network: pypsa.Network
 
     def __init__(self, network: pypsa.Network) -> None:
@@ -229,7 +229,7 @@ class StaticResults:
         return _get_network_components(self._network, component_class)
 
 
-class DynamicResults:
+class NetworkDynamicResults:
     _network: pypsa.Network
 
     def __init__(self, network: pypsa.Network) -> None:

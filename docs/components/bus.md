@@ -1,6 +1,6 @@
 # Bus
 
-Use the `Bus` class to represent a node that other types of components (`Generator`, `Line`, etc.) attach to.
+Use the [`Bus`](#components.bus.Bus) class to represent a node that other types of components ([generator](generator.md), [line](line.md), etc.) attach to.
 
 ## API Reference
 

@@ -1,0 +1,20 @@
+{
+    "folders": [
+        {
+            "path": "../.."
+        }
+    ],
+    "settings": {
+        "editor.fontFamily": "Menlo, Monaco, 'Courier New', monospace",
+        "editor.hideCursorInOverviewRuler": true,
+        "editor.overviewRulerBorder": false,
+        "editor.renderLineHighlight": "none",
+        "editor.rulers": [],
+        "problems.visibility": false,
+        "window.title": "TyPSA",
+        "workbench.editor.editorActionsLocation": "hidden",
+        "zenMode.centerLayout": false,
+        "zenMode.fullScreen": false,
+        "zenMode.showTabs": "none"
+    }
+}
