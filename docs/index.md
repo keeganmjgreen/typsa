@@ -8,7 +8,7 @@ TyPSA provides:
 
 - Classes for defining components of different types (`Bus`, `Load`, etc.) with their input data.
 - A subclass of `pypsa.Network` &mdash; `typsa.Network` &mdash; to which components can be added.
-- A convenient way to obtain static and dynamic model outputs (e.g., `typsa.Network.get_static_results(ExtendableGenerator)["g1"].p_nom_opt`).
+- Accessors for obtaining static and dynamic model outputs (e.g., `typsa.Network.static_results.extendable_generators["g1"].p_nom_opt`).
 
 ## Comparison
 
@@ -85,7 +85,9 @@ Obtaining static results:
 
 ```py
 n.buses
-# `n.buses` is typed as `Any`.
+# ────┐
+#     └─ Typed as `Any`.
+ 
 ```
 
 ```title="Output DataFrame"
@@ -99,7 +101,10 @@ Obtaining dynamic results:
 
 ```py
 n.buses_t["marginal_price"]
-# `n.buses_t` is typed as `dict`.
+# ──────┐
+#       └─ Typed as `dict`.
+ 
+ 
 ```
 
 ```title="Output DataFrame"
@@ -178,8 +183,10 @@ n.optimize()
 Obtaining static results:
 
 ``` py
-n.get_static_results(Bus)
-# `n.get_static_results(Bus)` is typed as `dict[str, BusStaticResults]`.
+n.static_results.all_buses
+# ─────────────┐ ────────┐
+#              │         └─ Typed as `typsa.components.bus.BusStaticResults`.
+#              └─ Typed as `typsa.network.StaticResults`.
 ```
 
 ```py title="Output"
@@ -192,8 +199,11 @@ n.get_static_results(Bus)
 Obtaining dynamic results:
 
 ``` py
-n.get_dynamic_results(Bus).marginal_price
-# `n.get_dynamic_results(Bus)` is typed as `BusDynamicResults`.
+n.dynamic_results.all_buses.marginal_price
+# ──────────────┐ ────────┐ ─────────────┐
+#               │         │              └─ Typed as `pandas.DataFrame`.
+#               │         └─ Typed as `typsa.components.bus.BusDynamicResults`.
+#               └─ Typed as `typsa.network.DynamicResults`.
 ```
 
 ```title="Output DataFrame"

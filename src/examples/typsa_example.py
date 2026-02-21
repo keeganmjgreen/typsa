@@ -45,6 +45,6 @@ n.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
 
 n.optimize()
 
-n.get_static_results(Bus)
+n.static_results.all_buses
 
-n.get_dynamic_results(Bus).marginal_price
+n.dynamic_results.all_buses.marginal_price
