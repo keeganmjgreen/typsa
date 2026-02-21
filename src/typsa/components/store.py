@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar, Literal
 
 import pandas
 from pydantic import Field
@@ -22,7 +22,7 @@ class BaseStore(BaseComponent):
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/stores/)
     """
 
-    class_name: Literal["Store"] = "Store"  # type: ignore
+    class_name: ClassVar = "Store"
 
     name: str = Field(min_length=1)
     """Unique name."""

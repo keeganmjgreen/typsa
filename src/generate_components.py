@@ -245,6 +245,7 @@ def _process_component(
     py_file_out = Path("src", "typsa", "components", f"{name}.py")
     additional_imports = [
         "dataclasses.dataclass",
+        "typing.ClassVar",
         "pandas",
         "._base_component.BaseComponent",
         "._base_component.BaseStaticResults",
@@ -281,7 +282,7 @@ def _process_component(
     text = text.replace('"""class_name', '"""\n\n    class_name')
     text = text.replace(
         f"class_name: Literal['{component_class_name}']",
-        f'class_name: Literal["{component_class_name}"] = "{component_class_name}"  # type: ignore\n',
+        f'class_name: ClassVar = "{component_class_name}"\n',
     )
     py_file_out.write_text(text)
 

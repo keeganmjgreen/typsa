@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar
 
 import pandas
 from pydantic import BaseModel, Field
@@ -30,7 +30,7 @@ class Bus(BaseComponent):
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/buses/)
     """
 
-    class_name: Literal["Bus"] = "Bus"  # type: ignore
+    class_name: ClassVar = "Bus"
 
     name: str = Field(min_length=1)
     """Unique name."""

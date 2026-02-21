@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar
 
 import pandas
 from pydantic import Field
@@ -18,7 +18,7 @@ class Load(BaseComponent):
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/loads/)
     """
 
-    class_name: Literal["Load"] = "Load"  # type: ignore
+    class_name: ClassVar = "Load"
 
     name: str = Field(min_length=1)
     """Unique name."""

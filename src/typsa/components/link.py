@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar, Literal
 
 import pandas
 from pydantic import BaseModel, Field
@@ -26,7 +26,7 @@ class BaseLink(BaseComponent):
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/links/)
     """
 
-    class_name: Literal["Link"] = "Link"  # type: ignore
+    class_name: ClassVar = "Link"
 
     name: str = Field(min_length=1)
     """Unique name."""

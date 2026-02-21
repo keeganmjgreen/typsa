@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar, Literal
 
 import pandas
 from pydantic import BaseModel, Field
@@ -47,7 +47,7 @@ class BaseLine(BaseComponent):
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/lines/)
     """
 
-    class_name: Literal["Line"] = "Line"  # type: ignore
+    class_name: ClassVar = "Line"
 
     name: str = Field(min_length=1)
     """Unique name."""

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar, Literal
 
 import pandas
 from pydantic import BaseModel, Field
@@ -56,7 +56,7 @@ class BaseTransformer(BaseComponent):
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/transformers/)
     """
 
-    class_name: Literal["Transformer"] = "Transformer"  # type: ignore
+    class_name: ClassVar = "Transformer"
 
     name: str = Field(min_length=1)
     """Unique name."""

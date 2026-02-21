@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar, Literal
 
 import pandas
 from pydantic import Field
@@ -22,7 +22,7 @@ class BaseGenerator(BaseComponent):
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/generators/)
     """
 
-    class_name: Literal["Generator"] = "Generator"  # type: ignore
+    class_name: ClassVar = "Generator"
 
     name: str = Field(min_length=1)
     """Unique name."""

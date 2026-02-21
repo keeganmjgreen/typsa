@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar
 
 import pandas
 from pydantic import Field
@@ -22,7 +22,7 @@ class ShuntImpedance(BaseComponent):
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/shunt_impedances/)
     """
 
-    class_name: Literal["ShuntImpedance"] = "ShuntImpedance"  # type: ignore
+    class_name: ClassVar = "ShuntImpedance"
 
     name: str = Field(min_length=1)
     """Unique name."""

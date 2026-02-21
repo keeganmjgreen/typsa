@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar, Literal
 
 from pydantic import Field
 
@@ -23,7 +23,7 @@ class GlobalConstraint(BaseComponent):
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/global_constraints/)
     """
 
-    class_name: Literal["GlobalConstraint"] = "GlobalConstraint"  # type: ignore
+    class_name: ClassVar = "GlobalConstraint"
 
     name: str = Field(min_length=1)
     """Unique name."""

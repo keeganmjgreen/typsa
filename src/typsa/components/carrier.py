@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import ClassVar
 
 from pydantic import Field
 
@@ -15,7 +15,7 @@ class Carrier(BaseComponent):
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/carriers/)
     """
 
-    class_name: Literal["Carrier"] = "Carrier"  # type: ignore
+    class_name: ClassVar = "Carrier"
 
     name: str = Field(min_length=1)
     """Unique name."""
