@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 import pandas
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from typsa.standard_types import StandardTransformerType
 
@@ -16,6 +16,40 @@ from ._base_component import (
     BaseResults,
     BaseStaticResults,
 )
+
+
+class CustomTransformerParameters(BaseModel):
+    x: float = Field(default=0.0, ge=0.0)
+    """Series reactance (per unit, using `s_nom` as base power); must be non-zero for AC branch in linear power flow. Series impedance $z = r + jx$ must be non-zero for the non-linear power flow."""
+
+    r: float = Field(default=0.0, ge=0.0)
+    """Series resistance (per unit, using `s_nom` as base power); must be non-zero for DC branch in linear power flow. Series impedance $z = r + jx$ must be non-zero for the non-linear power flow."""
+
+    g: float = Field(default=0.0, ge=0.0)
+    """Shunt conductivity (per unit, using `s_nom` as base power)."""
+
+    b: float = Field(default=0.0, ge=0.0)
+    """Shunt susceptance (per unit, using `s_nom` as base power)."""
+
+    tap_ratio: float = Field(default=1.0, gt=0.0)
+    """Ratio of per unit voltages at each bus for tap changed."""
+
+    tap_side: Literal[0, 1] = 0
+    """Defines if tap changer is modelled at the primary 0 side (usually high-voltage) or the secondary 1 side (usually low voltage) (must be 0 or 1, defaults to 0)."""
+
+    phase_shift: float = Field(default=0.0, ge=0.0, lt=360.0)
+    """Voltage phase angle shift."""
+
+
+class StandardTransformerParameters(BaseModel):
+    type: StandardTransformerType | None = None
+    """Name of 2-winding transformer standard type. The transformer type impedance parameters are taken from the standard type along with `num_parallel`."""
+
+    num_parallel: float = Field(default=1.0, ge=1.0)
+    """Number of parallel transformers (can also be fractional)."""
+
+    tap_position: int = 0
+    """Determines position relative to the neutral tap position."""
 
 
 class BaseTransformer(BaseComponent):
@@ -34,6 +68,9 @@ class BaseTransformer(BaseComponent):
 
     bus1: str = Field(min_length=1)
     """Name of destination bus (typically lower voltage) to which transformer is attached."""
+
+    parameters: CustomTransformerParameters | StandardTransformerParameters
+    """Transformer parameters."""
 
     model: Literal["t", "pi"] = "t"
     """Model used for admittance matrix; can be "t" or "pi"; defaults to "t" following physics and DIgSILENT PowerFactory."""
@@ -57,48 +94,14 @@ class BaseTransformer(BaseComponent):
     """Lifetime of transformer."""
 
 
-class BaseStandardTransformer(BaseTransformer):
-    type: StandardTransformerType | None = None
-    """Name of 2-winding transformer standard type. The transformer type impedance parameters are taken from the standard type along with `num_parallel`."""
-
-    num_parallel: float = Field(default=1.0, ge=1.0)
-    """Number of parallel transformers (can also be fractional)."""
-
-    tap_position: int = 0
-    """Determines position relative to the neutral tap position."""
-
-
-class BaseCustomTransformer(BaseTransformer):
-    x: float = Field(default=0.0, ge=0.0)
-    """Series reactance (per unit, using `s_nom` as base power); must be non-zero for AC branch in linear power flow. Series impedance $z = r + jx$ must be non-zero for the non-linear power flow."""
-
-    r: float = Field(default=0.0, ge=0.0)
-    """Series resistance (per unit, using `s_nom` as base power); must be non-zero for DC branch in linear power flow. Series impedance $z = r + jx$ must be non-zero for the non-linear power flow."""
-
-    g: float = Field(default=0.0, ge=0.0)
-    """Shunt conductivity (per unit, using `s_nom` as base power)."""
-
-    b: float = Field(default=0.0, ge=0.0)
-    """Shunt susceptance (per unit, using `s_nom` as base power)."""
-
-    tap_ratio: float = Field(default=1.0, gt=0.0)
-    """Ratio of per unit voltages at each bus for tap changed."""
-
-    tap_side: Literal[0, 1] = 0
-    """Defines if tap changer is modelled at the primary 0 side (usually high-voltage) or the secondary 1 side (usually low voltage) (must be 0 or 1, defaults to 0)."""
-
-    phase_shift: float = Field(default=0.0, ge=0.0, lt=360.0)
-    """Voltage phase angle shift."""
-
-
-class BaseNonExtendableTransformer(BaseTransformer):
+class Transformer(BaseTransformer):
     s_nom: float = Field(default=0.0, ge=0.0)
     """Limit of apparent power which can pass through branch in either direction."""
 
     s_nom_extendable: Literal[False] = False  # type: ignore
 
 
-class BaseExtendableTransformer(BaseTransformer):
+class ExtendableTransformer(BaseTransformer):
     s_nom_mod: float = Field(default=0.0, ge=0.0)
     """Modular unit size of transformer expansion of `s_nom`. Introduces integer variables."""
 
@@ -112,22 +115,6 @@ class BaseExtendableTransformer(BaseTransformer):
 
     s_nom_set: float | None = Field(default=None, ge=0.0)
     """Set value of `s_nom_opt`."""
-
-
-class StandardTransformer(BaseNonExtendableTransformer, BaseStandardTransformer):  # type: ignore
-    pass
-
-
-class CustomTransformer(BaseNonExtendableTransformer, BaseCustomTransformer):  # type: ignore
-    pass
-
-
-class ExtendableStandardTransformer(BaseExtendableTransformer, BaseStandardTransformer):  # type: ignore
-    pass
-
-
-class ExtendableCustomTransformer(BaseExtendableTransformer, BaseCustomTransformer):  # type: ignore
-    pass
 
 
 class TransformerStaticResults(BaseStaticResults):

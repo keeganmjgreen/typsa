@@ -2,22 +2,17 @@ from .bus import Bus
 from .carrier import Carrier
 from .generator import CommittableGenerator, ExtendableGenerator, Generator
 from .global_constraint import GlobalConstraint
-from .line import (
-    CustomLine,
-    ExtendableCustomLine,
-    ExtendableStandardLine,
-    StandardLine,
-)
+from .line import CustomLineParameters, ExtendableLine, Line, StandardLineParameters
 from .link import CommittableLink, ExtendableLink, Link
 from .load import Load
 from .shunt_impedance import ShuntImpedance
 from .storage_unit import ExtendableStorageUnit, StorageUnit
 from .store import ExtendableStore, Store
 from .transformer import (
-    CustomTransformer,
-    ExtendableCustomTransformer,
-    ExtendableStandardTransformer,
-    StandardTransformer,
+    CustomTransformerParameters,
+    ExtendableTransformer,
+    StandardTransformerParameters,
+    Transformer,
 )
 
 __all__ = [
@@ -25,23 +20,23 @@ __all__ = [
     "Carrier",
     "CommittableGenerator",
     "CommittableLink",
-    "CustomLine",
-    "CustomTransformer",
-    "ExtendableCustomLine",
-    "ExtendableCustomTransformer",
+    "CustomLineParameters",
+    "CustomTransformerParameters",
     "ExtendableGenerator",
+    "ExtendableLine",
     "ExtendableLink",
-    "ExtendableStandardLine",
-    "ExtendableStandardTransformer",
     "ExtendableStorageUnit",
     "ExtendableStore",
+    "ExtendableTransformer",
     "Generator",
     "GlobalConstraint",
+    "Line",
     "Link",
     "Load",
     "ShuntImpedance",
-    "StandardLine",
-    "StandardTransformer",
+    "StandardLineParameters",
+    "StandardTransformerParameters",
     "StorageUnit",
     "Store",
+    "Transformer",
 ]

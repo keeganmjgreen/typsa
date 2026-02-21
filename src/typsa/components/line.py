@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 import pandas
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from typsa.standard_types import StandardLineType
 
@@ -16,6 +16,31 @@ from ._base_component import (
     BaseResults,
     BaseStaticResults,
 )
+
+
+class CustomLineParameters(BaseModel):
+    x: float = Field(default=0.0, ge=0.0)
+    """Series reactance, must be non-zero for AC branch for linearised power flow equations. If the line has series inductance $L$ in Henries then $x = 2\\pi f L$ where $f$ is the frequency in Hertz. Series impedance $z = r + jx$ must be non-zero for non-linear power flow calculations."""
+
+    r: float = Field(default=0.0, ge=0.0)
+    """Series resistance, must be non-zero for DC branch for linearised power flow equations. Series impedance $z = r + jx$ must be non-zero for the non-linear power flow."""
+
+    g: float = Field(default=0.0, ge=0.0)
+    """Shunt conductivity. Shunt admittance is $y = g + jb$."""
+
+    b: float = Field(default=0.0, ge=0.0)
+    """Shunt susceptance. If the line has shunt capacitance $C$ in Farads then $b = 2\\pi f C$ where $f$ is the frequency in Hertz. Shunt admittance is $y = g + jb$."""
+
+
+class StandardLineParameters(BaseModel):
+    type: StandardLineType
+    """Name of line standard type. The line standard type impedance parameters are multiplied with the `length` and divided/multiplied by `num_parallel` to compute `x`, `r`, etc."""
+
+    length: float = Field(default=0.0, ge=0.0)
+    """Length of line. Also useful for calculating `capital_cost`."""
+
+    num_parallel: float = Field(default=1.0, ge=1.0)
+    """Number of parallel circuits. Can also be fractional."""
 
 
 class BaseLine(BaseComponent):
@@ -34,6 +59,9 @@ class BaseLine(BaseComponent):
 
     bus1: str = Field(min_length=1)
     """Name of destination bus to which branch is attached."""
+
+    parameters: CustomLineParameters | StandardLineParameters
+    """Line parameters."""
 
     s_nom_extendable: bool
     """Switch to allow capacity `s_nom` to be extended in optimisation."""
@@ -60,39 +88,14 @@ class BaseLine(BaseComponent):
     """Terrain factor for increasing `length` for `capital_cost` calculation."""
 
 
-class BaseStandardLine(BaseLine):
-    type: StandardLineType
-    """Name of line standard type. The line standard type impedance parameters are multiplied with the `length` and divided/multiplied by `num_parallel` to compute `x`, `r`, etc."""
-
-    length: float = Field(default=0.0, ge=0.0)
-    """Length of line. Also useful for calculating `capital_cost`."""
-
-    num_parallel: float = Field(default=1.0, ge=1.0)
-    """Number of parallel circuits. Can also be fractional."""
-
-
-class BaseCustomLine(BaseLine):
-    x: float = Field(default=0.0, ge=0.0)
-    """Series reactance, must be non-zero for AC branch for linearised power flow equations. If the line has series inductance $L$ in Henries then $x = 2\\pi f L$ where $f$ is the frequency in Hertz. Series impedance $z = r + jx$ must be non-zero for non-linear power flow calculations."""
-
-    r: float = Field(default=0.0, ge=0.0)
-    """Series resistance, must be non-zero for DC branch for linearised power flow equations. Series impedance $z = r + jx$ must be non-zero for the non-linear power flow."""
-
-    g: float = Field(default=0.0, ge=0.0)
-    """Shunt conductivity. Shunt admittance is $y = g + jb$."""
-
-    b: float = Field(default=0.0, ge=0.0)
-    """Shunt susceptance. If the line has shunt capacitance $C$ in Farads then $b = 2\\pi f C$ where $f$ is the frequency in Hertz. Shunt admittance is $y = g + jb$."""
-
-
-class BaseNonExtendableLine(BaseLine):
+class Line(BaseLine):
     s_nom: float = Field(default=0.0, ge=0.0)
     """Limit of apparent power which can pass through branch in either direction."""
 
     s_nom_extendable: Literal[False] = False  # type: ignore
 
 
-class BaseExtendableLine(BaseLine):
+class ExtendableLine(BaseLine):
     s_nom_mod: float = Field(default=0.0, ge=0.0)
     """Modular unit size of line expansion of `s_nom` (e.g. fixed rating of added circuit). Introduces integer variables."""
 
@@ -106,22 +109,6 @@ class BaseExtendableLine(BaseLine):
 
     s_nom_set: float | None = Field(default=None, ge=0.0)
     """Set value of `s_nom_opt`."""
-
-
-class StandardLine(BaseNonExtendableLine, BaseStandardLine):  # type: ignore
-    pass
-
-
-class CustomLine(BaseNonExtendableLine, BaseCustomLine):  # type: ignore
-    pass
-
-
-class ExtendableStandardLine(BaseExtendableLine, BaseStandardLine):  # type: ignore
-    pass
-
-
-class ExtendableCustomLine(BaseExtendableLine, BaseCustomLine):  # type: ignore
-    pass
 
 
 class LineStaticResults(BaseStaticResults):
