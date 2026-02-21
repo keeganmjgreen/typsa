@@ -1,8 +1,12 @@
-<div style="text-align: center; margin-right: 15px;"><img src="docs/logo/typsa_logo.svg"></img></div>
+<div align="center">
+    <img src="docs/logo/typsa_logo.svg">
+</div>
 
-<h1 style="text-align: center;">TyPSA</h1>
+<h1 align="center">TyPSA</h1>
 
-[<div style="text-align: center;">Documentation</div>](https://keeganmjgreen.github.io)
+<p align="center">
+    <a href="https://keeganmjgreen.github.io">Documentation</a>
+</p>
 
 TyPSA is a wrapper around the [PyPSA Python library for power systems analysis](https://docs.pypsa.org/latest/). TyPSA adds strong typing and data validation to PyPSA.
 
