@@ -1,5 +1,5 @@
 import typsa
-from typsa.components import Bus, CustomLine, Generator, Load
+from typsa.components import Bus, CustomLineParameters, Generator, Line, Load
 
 n = typsa.Network()
 
@@ -33,11 +33,11 @@ gen_2 = Generator(
     marginal_cost_quadratic=0.01,
 )
 
-line = CustomLine(
+line = Line(
     name="line_1",
     bus0="zone_1",
     bus1="zone_2",
-    x=0.01,
+    parameters=CustomLineParameters(x=0.01),
     s_nom=400,
 )
 
@@ -45,6 +45,6 @@ n.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
 
 n.optimize()
 
-n.results.buses.static
+n.get_static_results(Bus)
 
-n.results.buses.dynamic.marginal_price
+n.get_dynamic_results(Bus).marginal_price

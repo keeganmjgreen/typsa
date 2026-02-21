@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 import pandas
@@ -13,7 +12,6 @@ from typsa.literal_types import ControlType, SignType
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseResults,
     BaseStaticResults,
 )
 
@@ -154,7 +152,7 @@ class CommittableGenerator(Generator):
     """Maximum active power decrease at shut down, per unit of the nominal power."""
 
 
-class GeneratorStaticResults(BaseStaticResults):
+class ExtendableGeneratorStaticResults(BaseStaticResults):
     p_nom_opt: float = 0.0
     """Optimised nominal capacity."""
 
@@ -165,15 +163,6 @@ class GeneratorDynamicResults(BaseDynamicResults):
 
     q: pandas.DataFrame
     """Reactive power (positive if net generation)."""
-
-    status: pandas.DataFrame
-    """Status in the snapshot (1 is on, 0 is off). Only returned if `committable=True`."""
-
-    start_up: pandas.DataFrame
-    """Whether the unit was started in the snapshot (1 is yes, 0 is no). Only returned if `committable=True`."""
-
-    shut_down: pandas.DataFrame
-    """Whether the unit was shut down in the snapshot (1 is yes, 0 is no). Only returned if `committable=True`."""
 
     mu_upper: pandas.DataFrame
     """Shadow price of upper `p_nom` limit."""
@@ -191,7 +180,12 @@ class GeneratorDynamicResults(BaseDynamicResults):
     """Shadow price of lower ramp down limit."""
 
 
-@dataclass(repr=False)
-class GeneratorResults(BaseResults):
-    static: dict[str, GeneratorStaticResults]
-    dynamic: GeneratorDynamicResults
+class CommittableGeneratorDynamicResults(GeneratorDynamicResults):
+    status: pandas.DataFrame
+    """Status in the snapshot (1 is on, 0 is off)."""
+
+    start_up: pandas.DataFrame
+    """Whether the unit was started in the snapshot (1 is yes, 0 is no)."""
+
+    shut_down: pandas.DataFrame
+    """Whether the unit was shut down in the snapshot (1 is yes, 0 is no)."""

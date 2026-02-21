@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 import pandas
@@ -13,7 +12,6 @@ from typsa.literal_types import SignType
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseResults,
     BaseStaticResults,
 )
 
@@ -116,7 +114,7 @@ class ExtendableStore(BaseStore):
     """Fixed period costs of extending `e_nom` by 1 MWh, including periodized investment costs and periodic fixed O&M costs (e.g. annuitized investment costs)."""
 
 
-class StoreStaticResults(BaseStaticResults):
+class ExtendableStoreStaticResults(BaseStaticResults):
     e_nom_opt: float = 0.0
     """Optimised nominal energy capacity outputted by optimisation."""
 
@@ -139,9 +137,3 @@ class StoreDynamicResults(BaseDynamicResults):
 
     mu_energy_balance: pandas.DataFrame
     """Shadow price of storage consistency equations (i.e. water values)."""
-
-
-@dataclass(repr=False)
-class StoreResults(BaseResults):
-    static: dict[str, StoreStaticResults]
-    dynamic: StoreDynamicResults

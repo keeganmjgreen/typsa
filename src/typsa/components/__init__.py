@@ -8,6 +8,7 @@ from .load import Load
 from .shunt_impedance import ShuntImpedance
 from .storage_unit import ExtendableStorageUnit, StorageUnit
 from .store import ExtendableStore, Store
+from .sub_network import SubNetwork
 from .transformer import (
     CustomTransformerParameters,
     ExtendableTransformer,
@@ -38,5 +39,6 @@ __all__ = [
     "StandardTransformerParameters",
     "StorageUnit",
     "Store",
+    "SubNetwork",
     "Transformer",
 ]

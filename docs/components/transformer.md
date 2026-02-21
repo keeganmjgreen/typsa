@@ -6,7 +6,7 @@ Set `parameters=CustomTransformerParameters(...)` to represent a transformer wit
 
 Set `parameters=StandardTransformerParameters(...)` to represent a transformer with a [standard transformer type](https://docs.pypsa.org/stable/user-guide/components/transformer-types/), for which the `x`, `r`, etc. values will be calculated automatically based on the number of parallel transformers (`num_parallel`).
 
-Use the `ExtendableTransformer` class to represent a hypothetical transformer with an apparent power capacity that is flexible, in order to optimize its apparent power capacity (`TransformerStaticResults.s_nom_opt`).
+Use the `ExtendableTransformer` class to represent a hypothetical transformer with an apparent power capacity that is flexible, in order to optimize its apparent power capacity (`ExtendableTransformerStaticResults.s_nom_opt`).
 
 ## API Reference
 
@@ -20,4 +20,4 @@ Use the `ExtendableTransformer` class to represent a hypothetical transformer wi
       show_root_toc_entry: false
       show_signature_annotations: true
       show_source: false
-      members: ['CustomTransformerParameters', 'StandardTransformerParameters', 'BaseTransformer', 'Transformer', 'ExtendableTransformer', 'TransformerStaticResults', 'TransformerDynamicResults']
+      members: ['CustomTransformerParameters', 'StandardTransformerParameters', 'BaseTransformer', 'Transformer', 'ExtendableTransformer', 'TransformerStaticResults', 'ExtendableTransformerStaticResults', 'TransformerDynamicResults']

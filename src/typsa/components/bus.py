@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 import pandas
@@ -13,7 +12,6 @@ from typsa.literal_types import ControlType
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseResults,
     BaseStaticResults,
 )
 
@@ -82,9 +80,3 @@ class BusDynamicResults(BaseDynamicResults):
 
     marginal_price: pandas.DataFrame
     """Shadow price from energy balance constraint."""
-
-
-@dataclass(repr=False)
-class BusResults(BaseResults):
-    static: dict[str, BusStaticResults]
-    dynamic: BusDynamicResults

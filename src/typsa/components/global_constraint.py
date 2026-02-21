@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 from pydantic import Field
 
-from ._base_component import BaseComponent, BaseResults, BaseStaticResults
+from ._base_component import BaseComponent, BaseStaticResults
 
 type GlobalConstraintType = Literal[
     "primary_energy",
@@ -51,8 +50,3 @@ class GlobalConstraint(BaseComponent):
 class GlobalConstraintStaticResults(BaseStaticResults):
     mu: float = 0.0
     """Shadow price of global constraint."""
-
-
-@dataclass(repr=False)
-class GlobalConstraintResults(BaseResults):
-    static: dict[str, GlobalConstraintStaticResults]

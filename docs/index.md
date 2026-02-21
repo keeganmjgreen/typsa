@@ -6,9 +6,9 @@ PyPSA is used for optimizing and simulating power grids. PyPSA provides a `pypsa
 
 TyPSA provides:
 
-- Classes for defining components of different types (`typsa.components.Bus`, `typsa.components.Load`, etc.) with their input data.
+- Classes for defining components of different types (`Bus`, `Load`, etc.) with their input data.
 - A subclass of `pypsa.Network` &mdash; `typsa.Network` &mdash; to which components can be added.
-- Accessors for obtaining static and dynamic model outputs (e.g., `typsa.Network.results.buses.static` and `.dynamic`).
+- A convenient way to obtain static and dynamic model outputs (e.g., `typsa.Network.get_static_results(ExtendableGenerator)["g1"].p_nom_opt`).
 
 ## Comparison
 
@@ -85,10 +85,7 @@ Obtaining static results:
 
 ```py
 n.buses
-# ────┐
-#     └─ Typed as `Any`.
- 
- 
+# `n.buses` is typed as `Any`.
 ```
 
 ```title="Output DataFrame"
@@ -102,11 +99,7 @@ Obtaining dynamic results:
 
 ```py
 n.buses_t["marginal_price"]
-# ──────┐
-#       └─ Typed as `dict`.
- 
- 
- 
+# `n.buses_t` is typed as `dict`.
 ```
 
 ```title="Output DataFrame"
@@ -125,7 +118,7 @@ Importing:
 
 ```py
 import typsa
-from typsa.components import Bus, Generator, Line, Load
+from typsa.components import Bus, CustomLineParameters, Generator, Line, Load
 ```
 
 Defining a network:
@@ -162,11 +155,11 @@ gen_2 = Generator(
     marginal_cost_quadratic=0.01,
 )
 
-line = CustomLine(
+line = Line(
     name="line_1",
     bus0="zone_1",
     bus1="zone_2",
-    x=0.01,
+    parameters=CustomLineParameters(x=0.01),
     s_nom=400,
 )
 
@@ -184,12 +177,9 @@ n.optimize()
 
 Obtaining static results:
 
-```py
-n.results.buses.static
-# ──────┐ ────┐ ──────┐
-#       │     │       └─ Typed as `dict[str, typsa.components.bus.BusStaticResults].
-#       │     └─ Typed as `typsa.components.bus.BusResults`.
-#       └─ Typed as `typsa.network.Results`.
+``` py
+n.get_static_results(Bus)
+# `n.get_static_results(Bus)` is typed as `dict[str, BusStaticResults]`.
 ```
 
 ```py title="Output"
@@ -201,13 +191,9 @@ n.results.buses.static
 
 Obtaining dynamic results:
 
-```py
-n.results.buses.dynamic.marginal_price
-# ──────┐ ────┐ ──────┐ ─────────────┐
-#       │     │       │              └─ Typed as `pandas.DataFrame`.
-#       │     │       └─ Typed as `typsa.components.bus.BusDynamicResults.
-#       │     └─ Typed as `typsa.components.bus.BusResults`.
-#       └─ Typed as `typsa.network.Results`.
+``` py
+n.get_dynamic_results(Bus).marginal_price
+# `n.get_dynamic_results(Bus)` is typed as `BusDynamicResults`.
 ```
 
 ```title="Output DataFrame"

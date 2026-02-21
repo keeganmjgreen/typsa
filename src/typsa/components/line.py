@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 import pandas
@@ -13,7 +12,6 @@ from typsa.standard_types import StandardLineType
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseResults,
     BaseStaticResults,
 )
 
@@ -133,6 +131,8 @@ class LineStaticResults(BaseStaticResults):
     r_pu_eff: float = 0.0
     """Effective per unit series resistance for linear power flow, calculated by `n.calculate_dependent_values()` from `r` and `n.buses.v_nom`."""
 
+
+class ExtendableLineStaticResults(LineStaticResults):
     s_nom_opt: float = 0.0
     """Optimised nominal capacity for apparent power."""
 
@@ -155,9 +155,3 @@ class LineDynamicResults(BaseDynamicResults):
 
     mu_upper: pandas.DataFrame
     """Shadow price of upper `s_nom` limit $f \\leq F$. Always non-negative."""
-
-
-@dataclass(repr=False)
-class LineResults(BaseResults):
-    static: dict[str, LineStaticResults]
-    dynamic: LineDynamicResults

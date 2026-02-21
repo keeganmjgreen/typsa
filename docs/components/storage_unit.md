@@ -2,7 +2,7 @@
 
 Use the `StorageUnit` class to represent a storage unit with a given active power capacity (`p_nom`), in order to optimize its active power over time (`StorageUnitDynamicResults.p`). The storage unit's energy capacity is determined by its `max_hours` in conjunction with `p_nom`.
 
-Use the `ExtendableStorageUnit` class to represent a hypothetical storage unit with an active power capacity that is flexible, in order to also optimize the active power capacity (`StorageUnitStaticResults.p_nom_opt`).
+Use the `ExtendableStorageUnit` class to represent a hypothetical storage unit with an active power capacity that is flexible, in order to also optimize the active power capacity (`ExtendableStorageUnitStaticResults.p_nom_opt`).
 
 ## API Reference
 
@@ -16,4 +16,4 @@ Use the `ExtendableStorageUnit` class to represent a hypothetical storage unit w
       show_root_toc_entry: false
       show_signature_annotations: true
       show_source: false
-      members: ['BaseStorageUnit', 'StorageUnit', 'ExtendableStorageUnit', 'StorageUnitStaticResults', 'StorageUnitDynamicResults']
+      members: ['BaseStorageUnit', 'StorageUnit', 'ExtendableStorageUnit', 'ExtendableStorageUnitStaticResults', 'StorageUnitDynamicResults']

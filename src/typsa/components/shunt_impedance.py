@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 import pandas
@@ -13,7 +12,6 @@ from typsa.literal_types import SignType
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseResults,
     BaseStaticResults,
 )
 
@@ -59,9 +57,3 @@ class ShuntImpedanceDynamicResults(BaseDynamicResults):
 
     q: pandas.DataFrame
     """Reactive power (positive if net generation)."""
-
-
-@dataclass(repr=False)
-class ShuntImpedanceResults(BaseResults):
-    static: dict[str, ShuntImpedanceStaticResults]
-    dynamic: ShuntImpedanceDynamicResults

@@ -6,7 +6,7 @@ Set `parameters=CustomLineParameters(...)` to represent a line with given values
 
 Set `parameters=StandardLineParameters(...)` to represent a line with a [standard line type](https://docs.pypsa.org/stable/user-guide/components/line-types/), for which the `x`, `r`, `g`, and `b` values will be calculated automatically based on the line's `length` and number of parallel conductors (`num_parallel`).
 
-Use the `ExtendableLine` class to represent a hypothetical line with an apparent power capacity that is flexible, in order to optimize its apparent power capacity (`LineStaticResults.s_nom_opt`).
+Use the `ExtendableLine` class to represent a hypothetical line with an apparent power capacity that is flexible, in order to optimize its apparent power capacity (`ExtendableLineStaticResults.s_nom_opt`).
 
 ## API Reference
 
@@ -20,4 +20,4 @@ Use the `ExtendableLine` class to represent a hypothetical line with an apparent
       show_root_toc_entry: false
       show_signature_annotations: true
       show_source: false
-      members: ['CustomLineParameters', 'StandardLineParameters', 'BaseLine', 'Line', 'ExtendableLine', 'LineStaticResults', 'LineDynamicResults']
+      members: ['CustomLineParameters', 'StandardLineParameters', 'BaseLine', 'Line', 'ExtendableLine', 'LineStaticResults', 'ExtendableLineStaticResults', 'LineDynamicResults']

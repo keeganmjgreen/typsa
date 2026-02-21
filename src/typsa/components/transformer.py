@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 import pandas
@@ -13,7 +12,6 @@ from typsa.standard_types import StandardTransformerType
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseResults,
     BaseStaticResults,
 )
 
@@ -139,6 +137,8 @@ class TransformerStaticResults(BaseStaticResults):
     r_pu_eff: float = 0.0
     """Effective per unit series resistance for linear power flow, calculated by `n.calculate_dependent_values()` from `x`, `tap_ratio` for transformers and `n.buses.v_nom`."""
 
+
+class ExtendableTransformerStaticResults(TransformerStaticResults):
     s_nom_opt: float = 0.0
     """Optimised nominal capacity for apparent power."""
 
@@ -161,9 +161,3 @@ class TransformerDynamicResults(BaseDynamicResults):
 
     mu_upper: pandas.DataFrame
     """Shadow price of upper `s_nom` limit. Always non-negative."""
-
-
-@dataclass(repr=False)
-class TransformerResults(BaseResults):
-    static: dict[str, TransformerStaticResults]
-    dynamic: TransformerDynamicResults

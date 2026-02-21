@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 import pandas
@@ -10,7 +9,7 @@ from pydantic import Field
 
 from typsa.literal_types import SignType
 
-from ._base_component import BaseComponent, BaseDynamicResults, BaseResults
+from ._base_component import BaseComponent, BaseDynamicResults
 
 
 class Load(BaseComponent):
@@ -49,8 +48,3 @@ class LoadDynamicResults(BaseDynamicResults):
 
     q: pandas.DataFrame
     """Reactive power (positive if net load)."""
-
-
-@dataclass(repr=False)
-class LoadResults(BaseResults):
-    dynamic: LoadDynamicResults

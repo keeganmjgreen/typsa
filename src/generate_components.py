@@ -13,9 +13,7 @@ from datamodel_code_generator import generate
 from datamodel_code_generator.enums import DataModelType, InputFileType
 from pydantic.alias_generators import to_pascal, to_snake
 
-from plural_to_singular_component_names import (
-    PLURAL_TO_SINGULAR_COMPONENT_NAMES,
-)
+from typsa.components._component_names import PLURAL_TO_SINGULAR_COMPONENT_NAMES
 
 ends_with_period = pydantic.AfterValidator(
     lambda s: s.removesuffix(".") + "." if isinstance(s, str) else s
@@ -251,14 +249,12 @@ def _process_component(
         "._base_component.BaseComponent",
         "._base_component.BaseStaticResults",
         "._base_component.BaseDynamicResults",
-        "._base_component.BaseResults",
     ]
     _json_schemas_to_py_file(all_json_schemas, py_file_out, additional_imports)
 
     component_class_name = to_pascal(name)
     static_results_class_name = f"{component_class_name}StaticResults"
     dynamic_results_class_name = f"{component_class_name}DynamicResults"
-    results_class_name = f"{component_class_name}Results"
 
     text = py_file_out.read_text()
     text = text.replace(
@@ -279,17 +275,6 @@ def _process_component(
         pass
     else:
         text = text[:idx] + text[idx:].replace("list[Any]", "pandas.DataFrame")
-    if (
-        len(static_results_json_schema.properties) > 0
-        or len(dynamic_results_json_schema.properties) > 0
-    ):
-        text += (
-            f"\n\n@dataclass(repr=False)\nclass {results_class_name}(BaseResults):\n"
-        )
-        if len(static_results_json_schema.properties) > 0:
-            text += f"    static: dict[str, {static_results_class_name}]\n"
-        if len(dynamic_results_json_schema.properties) > 0:
-            text += f"    dynamic: {dynamic_results_class_name}\n"
     text = text.replace('.\n    """\n    ', '."""\n\n    ')
     text = text.replace('.\n    """\n', '."""\n')
     text = text.replace('\n    """\n    ', '\n    """')

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 import pandas
@@ -11,7 +10,6 @@ from pydantic import BaseModel, Field
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseResults,
     BaseStaticResults,
 )
 
@@ -153,7 +151,7 @@ class CommittableLink(Link):
     """Maximum decrease at shut down, per unit of `p_nom`."""
 
 
-class LinkStaticResults(BaseStaticResults):
+class ExtendableLinkStaticResults(BaseStaticResults):
     p_nom_opt: float = 0.0
     """Optimised nominal capacity."""
 
@@ -164,15 +162,6 @@ class LinkDynamicResults(BaseDynamicResults):
 
     p1: pandas.DataFrame
     """Power at `bus1` (positive if link is withdrawing from `bus1`)."""
-
-    status: pandas.DataFrame
-    """Status in the snapshot (1 is on, 0 is off). Only returned if `committable=True`."""
-
-    start_up: pandas.DataFrame
-    """Whether the unit was started in the snapshot (1 is yes, 0 is no). Only returned if `committable=True`."""
-
-    shut_down: pandas.DataFrame
-    """Whether the unit was shut down in the snapshot (1 is yes, 0 is no). Only returned if `committable=True`."""
 
     mu_lower: pandas.DataFrame
     """Shadow price of lower `p_nom` limit  $-F \\leq f$. Always non-negative."""
@@ -190,7 +179,12 @@ class LinkDynamicResults(BaseDynamicResults):
     """Shadow price of lower ramp down limit."""
 
 
-@dataclass(repr=False)
-class LinkResults(BaseResults):
-    static: dict[str, LinkStaticResults]
-    dynamic: LinkDynamicResults
+class CommittableLinkDynamicResults(LinkDynamicResults):
+    status: pandas.DataFrame
+    """Status in the snapshot (1 is on, 0 is off)."""
+
+    start_up: pandas.DataFrame
+    """Whether the unit was started in the snapshot (1 is yes, 0 is no)."""
+
+    shut_down: pandas.DataFrame
+    """Whether the unit was shut down in the snapshot (1 is yes, 0 is no)."""
