@@ -62,18 +62,17 @@ from .components.transformer import (
 
 
 class Network(pypsa.Network):
-    def add_component(self, component: BaseComponent) -> None:
-        """Add a component to the network."""
+    def add_components(self, *components: BaseComponent) -> None:
+        """Add one or more components to the network."""
+        for component in components:
+            self._add_component(component)
+
+    def _add_component(self, component: BaseComponent) -> None:
         kwargs = component.model_dump(exclude_none=True)
         kwargs["class_name"] = component.class_name
         if "parameters" in kwargs:
             kwargs.update(kwargs.pop("parameters"))
         super().add(**kwargs)
-
-    def add_components(self, *components: BaseComponent) -> None:
-        """Add multiple components to the network."""
-        for component in components:
-            self.add_component(component)
 
     @property
     def static_results(self) -> NetworkStaticResults:
