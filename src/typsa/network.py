@@ -88,6 +88,8 @@ class NetworkOptimizationModel(PypsaNetworkDerivative):
             compute_infeasibilities=compute_infeasibilities,
             **kwargs,
         )
+        pypsa_network_copy.optimize.fix_optimal_capacities()
+        pypsa_network_copy.optimize.fix_optimal_dispatch()
         return OptimizedNetwork(pypsa_network_copy)
 
 
