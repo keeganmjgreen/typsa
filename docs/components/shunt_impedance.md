@@ -10,4 +10,10 @@
       show_root_toc_entry: false
       show_signature_annotations: true
       show_source: false
-      members: ['ShuntImpedance', 'ShuntImpedanceStaticResults', 'ShuntImpedanceDynamicResults']
+      members:
+        - ShuntImpedance
+        - ShuntImpedanceOptimizationStaticResults
+        - ShuntImpedanceBaseDynamicResults
+        - ShuntImpedanceOptimizationDynamicResults
+        - ShuntImpedancePfDynamicResults
+        - ShuntImpedanceNonlinearPfDynamicResults

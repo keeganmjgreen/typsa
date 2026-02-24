@@ -138,23 +138,22 @@ class ExtendableStorageUnit(BaseStorageUnit):
     """Fixed period costs of extending `p_nom` by 1 MW, including periodized investment costs and periodic fixed O&M costs (e.g. annuitized investment costs)."""
 
 
-class ExtendableStorageUnitStaticResults(BaseStaticResults):
+class ExtendableStorageUnitOptimizationStaticResults(BaseStaticResults):
     p_nom_opt: float = 0.0
     """Optimised nominal power."""
 
 
-class StorageUnitDynamicResults(BaseDynamicResults):
+class StorageUnitBaseDynamicResults(BaseDynamicResults):
     p: pandas.DataFrame
     """Active power at bus (positive if net generation)."""
 
+
+class StorageUnitOptimizationDynamicResults(StorageUnitBaseDynamicResults):
     p_dispatch: pandas.DataFrame
     """Active power dispatch at bus."""
 
     p_store: pandas.DataFrame
     """Active power charging at bus."""
-
-    q: pandas.DataFrame
-    """Reactive power (positive if net generation)."""
 
     state_of_charge: pandas.DataFrame
     """State of charge as calculated by the optimisation."""
@@ -173,3 +172,12 @@ class StorageUnitDynamicResults(BaseDynamicResults):
 
     mu_energy_balance: pandas.DataFrame
     """Shadow price of storage consistency equations."""
+
+
+class StorageUnitPfDynamicResults(StorageUnitBaseDynamicResults):
+    pass
+
+
+class StorageUnitNonlinearPfDynamicResults(StorageUnitPfDynamicResults):
+    q: pandas.DataFrame
+    """Reactive power (positive if net generation)."""

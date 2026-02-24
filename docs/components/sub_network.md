@@ -10,4 +10,6 @@
       show_root_toc_entry: false
       show_signature_annotations: true
       show_source: false
-      members: ['SubNetwork', 'SubNetworkStaticResults']
+      members:
+        - SubNetwork
+        - SubNetworkOptimizationStaticResults

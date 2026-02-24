@@ -151,18 +151,20 @@ class CommittableLink(Link):
     """Maximum decrease at shut down, per unit of `p_nom`."""
 
 
-class ExtendableLinkStaticResults(BaseStaticResults):
+class ExtendableLinkOptimizationStaticResults(BaseStaticResults):
     p_nom_opt: float = 0.0
     """Optimised nominal capacity."""
 
 
-class LinkDynamicResults(BaseDynamicResults):
+class LinkBaseDynamicResults(BaseDynamicResults):
     p0: pandas.DataFrame
     """Power at `bus0` (positive if link is withdrawing from `bus0`)."""
 
     p1: pandas.DataFrame
     """Power at `bus1` (positive if link is withdrawing from `bus1`)."""
 
+
+class LinkOptimizationDynamicResults(LinkBaseDynamicResults):
     mu_lower: pandas.DataFrame
     """Shadow price of lower `p_nom` limit  $-F \\leq f$. Always non-negative."""
 
@@ -179,7 +181,7 @@ class LinkDynamicResults(BaseDynamicResults):
     """Shadow price of lower ramp down limit."""
 
 
-class CommittableLinkDynamicResults(LinkDynamicResults):
+class CommittableLinkOptimizationDynamicResults(LinkOptimizationDynamicResults):
     status: pandas.DataFrame
     """Status in the snapshot (1 is on, 0 is off)."""
 
@@ -188,3 +190,11 @@ class CommittableLinkDynamicResults(LinkDynamicResults):
 
     shut_down: pandas.DataFrame
     """Whether the unit was shut down in the snapshot (1 is yes, 0 is no)."""
+
+
+class LinkPfDynamicResults(LinkBaseDynamicResults):
+    pass
+
+
+class LinkNonlinearPfDynamicResults(LinkPfDynamicResults):
+    pass

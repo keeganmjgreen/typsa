@@ -12,7 +12,7 @@ class SubNetwork(BaseComponent):
     """
 
 
-class SubNetworkStaticResults(BaseStaticResults):
+class SubNetworkOptimizationStaticResults(BaseStaticResults):
     name: str
     """Unique name assigned based on order of sub-network in list of sub-networks."""
 

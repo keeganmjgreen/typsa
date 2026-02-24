@@ -3,14 +3,14 @@
 import typsa
 from typsa.components import Bus, Load
 
-n = typsa.Network()
+network = typsa.Network()
 
-n.add_components(Bus(name="zone_1"))
-n.add_components(Bus(name="zone_2"))
+network.add_components(Bus(name="zone_1"))
+network.add_components(Bus(name="zone_2"))
 
-n.add_components(
+network.add_components(
     Load(
         name="load_1",
-        bus=
+        bus=123
     )
 )

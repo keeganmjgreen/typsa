@@ -1,7 +1,7 @@
 import typsa
 from typsa.components import Bus, CustomLineParameters, Generator, Line, Load
 
-n = typsa.Network()
+network = typsa.Network()
 
 zone_1 = Bus(name="zone_1")
 zone_2 = Bus(name="zone_2")
@@ -41,10 +41,10 @@ line = Line(
     s_nom=400,
 )
 
-n.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
+network.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
 
-n.optimize()
+optimized_network = network.model().optimize()
 
-n.static_results.all_buses
+optimized_network.static_results.all_buses
 
-n.dynamic_results.all_buses.marginal_
+optimized_network.dynamic_results.all_buses.marginal_

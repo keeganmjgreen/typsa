@@ -109,7 +109,7 @@ class ExtendableLine(BaseLine):
     """Set value of `s_nom_opt`."""
 
 
-class LineStaticResults(BaseStaticResults):
+class LineOptimizationStaticResults(BaseStaticResults):
     sub_network: str
     """Name of sub-network to which lines belongs, as calculated by `n.determine_network_topology()`."""
 
@@ -132,26 +132,34 @@ class LineStaticResults(BaseStaticResults):
     """Effective per unit series resistance for linear power flow, calculated by `n.calculate_dependent_values()` from `r` and `n.buses.v_nom`."""
 
 
-class ExtendableLineStaticResults(LineStaticResults):
+class ExtendableLineOptimizationStaticResults(LineOptimizationStaticResults):
     s_nom_opt: float = 0.0
     """Optimised nominal capacity for apparent power."""
 
 
-class LineDynamicResults(BaseDynamicResults):
+class LineBaseDynamicResults(BaseDynamicResults):
     p0: pandas.DataFrame
     """Active power at `bus0` (positive if branch is withdrawing power from `bus0`)."""
-
-    q0: pandas.DataFrame
-    """Reactive power at `bus0` (positive if branch is withdrawing power from `bus0`)."""
 
     p1: pandas.DataFrame
     """Active power at `bus1` (positive if branch is withdrawing power from `bus1`)."""
 
-    q1: pandas.DataFrame
-    """Reactive power at `bus1` (positive if branch is withdrawing power from `bus1`)."""
 
+class LineOptimizationDynamicResults(LineBaseDynamicResults):
     mu_lower: pandas.DataFrame
     """Shadow price of lower `s_nom` limit $-F \\leq f$. Always non-negative."""
 
     mu_upper: pandas.DataFrame
     """Shadow price of upper `s_nom` limit $f \\leq F$. Always non-negative."""
+
+
+class LinePfDynamicResults(LineBaseDynamicResults):
+    pass
+
+
+class LineNonlinearPfDynamicResults(LinePfDynamicResults):
+    q0: pandas.DataFrame
+    """Reactive power at `bus0` (positive if branch is withdrawing power from `bus0`)."""
+
+    q1: pandas.DataFrame
+    """Reactive power at `bus1` (positive if branch is withdrawing power from `bus1`)."""

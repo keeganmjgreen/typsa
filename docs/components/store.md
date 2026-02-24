@@ -1,8 +1,8 @@
 # Store
 
-Use the [`Store`](#components.store.Store) class to represent an energy store with unlimited power capacity and given energy capacity ([`e_nom`](#components.store.Store.e_nom)), in order to optimize its active power over time ([`StoreDynamicResults.p`](#components.store.StoreDynamicResults.p)).
+Use the [`Store`](#components.store.Store) class to represent an energy store with unlimited power capacity and given energy capacity ([`e_nom`](#components.store.Store.e_nom)), in order to optimize its active power over time ([`StoreOptimizationDynamicResults.p`](#components.store.StoreBaseDynamicResults.p)).
 
-Use the [`ExtendableStore`](#components.store.ExtendableStore) class to represent a hypothetical store with an energy capacity that is flexible, in order to also optimize the energy capacity ([`ExtendableStoreStaticResults.e_nom_opt`](#components.store.ExtendableStoreStaticResults.e_nom_opt)).
+Use the [`ExtendableStore`](#components.store.ExtendableStore) class to represent a hypothetical store with an energy capacity that is flexible, in order to also optimize the energy capacity ([`ExtendableStoreOptimizationStaticResults.e_nom_opt`](#components.store.ExtendableStoreOptimizationStaticResults.e_nom_opt)).
 
 ## API Reference
 
@@ -16,4 +16,12 @@ Use the [`ExtendableStore`](#components.store.ExtendableStore) class to represen
       show_root_toc_entry: false
       show_signature_annotations: true
       show_source: false
-      members: ['BaseStore', 'Store', 'ExtendableStore', 'ExtendableStoreStaticResults', 'StoreDynamicResults']
+      members:
+        - BaseStore
+        - Store
+        - ExtendableStore
+        - ExtendableStoreOptimizationStaticResults
+        - StoreBaseDynamicResults
+        - StoreOptimizationDynamicResults
+        - StorePfDynamicResults
+        - StoreNonlinearPfDynamicResults

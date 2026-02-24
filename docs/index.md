@@ -13,8 +13,8 @@ PyPSA is used for optimizing and simulating power grids. PyPSA provides a `pypsa
 TyPSA provides:
 
 - Classes for defining [components](components/index.md) of different types ([`Bus`](components/bus.md), [`Load`](components/load.md), etc.) with their input data.
-- A subclass of `pypsa.Network` &mdash; [`typsa.Network`](network.md) &mdash; to which components can be added. Optimizations and power flow simulations can be run using `typsa.Network.optimize()`, `typsa.Network.pf()`, etc.
-- Accessors for obtaining static and dynamic model outputs (e.g., `typsa.Network.static_results.extendable_generators["g1"].p_nom_opt`).
+- APIs for defining a network, creating its optimization model, optimizing the network, and simulating power flow.
+- Accessors for obtaining static and dynamic results of optimization and simulation.
 
 ## Comparison
 
@@ -38,25 +38,25 @@ import pypsa
 Defining a network:
 
 ```py
-n = pypsa.Network()
+network = pypsa.Network()
 
-n.add("Bus", name="zone_1")
-n.add("Bus", name="zone_2")
+network.add("Bus", name="zone_1")
+network.add("Bus", name="zone_2")
 
-n.add(
+network.add(
     "Load",
     name="load_1",
     bus="zone_1",
     p_set=500,
 )
-n.add(
+network.add(
     "Load",
     name="load_2",
     bus="zone_2",
     p_set=1500,
 )
 
-n.add(
+network.add(
     "Generator",
     name="gen_1",
     bus="zone_1",
@@ -64,7 +64,7 @@ n.add(
     marginal_cost=10,
     marginal_cost_quadratic=0.005,
 )
-n.add(
+network.add(
     "Generator",
     name="gen_2",
     bus="zone_2",
@@ -73,7 +73,7 @@ n.add(
     marginal_cost_quadratic=0.01,
 )
 
-n.add(
+network.add(
     "Line",
     "line_1",
     bus0="zone_1",
@@ -86,16 +86,13 @@ n.add(
 Optimizing a network:
 
 ```py
-n.optimize()
+network.optimize()
 ```
 
 Obtaining static results:
 
 ```py
-n.buses
-# ────┐
-#     └─ Typed as `Any`.
- 
+network.buses
 ```
 
 ```title="Output DataFrame"
@@ -108,11 +105,7 @@ zone_2    1.0       0.0  0.0      AC                         1.0           0.0  
 Obtaining dynamic results:
 
 ```py
-n.buses_t["marginal_price"]
-# ──────┐
-#       └─ Typed as `dict`.
- 
- 
+network.buses_t["marginal_price"]
 ```
 
 ```title="Output DataFrame"
@@ -137,7 +130,7 @@ from typsa.components import Bus, CustomLineParameters, Generator, Line, Load
 Defining a network:
 
 ```py
-n = typsa.Network()
+network = typsa.Network()
 
 zone_1 = Bus(name="zone_1")
 zone_2 = Bus(name="zone_2")
@@ -176,7 +169,7 @@ line = Line(
     s_nom=400,
 )
 
-n.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
+network.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
  
  
  
@@ -185,21 +178,18 @@ n.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
 Optimizing a network:
 
 ```py
-n.optimize()
+optimized_network = network.model().optimize()
 ```
 
 Obtaining static results:
 
 ``` py
-n.static_results.all_buses
-# ─────────────┐ ────────┐
-#              │         └─ Typed as `typsa.components.bus.BusStaticResults`.
-#              └─ Typed as `typsa.network.StaticResults`.
+optimized_network.static_results.all_buses
 ```
 
 ```py title="Output"
-{'zone_1': BusStaticResults(control='Slack', generator='gen_1', sub_network='0'),
- 'zone_2': BusStaticResults(control='PQ', generator='', sub_network='0')}
+{'zone_1': BusOptimizationStaticResults(control='Slack', generator='gen_1', sub_network='0'),
+ 'zone_2': BusOptimizationStaticResults(control='PQ', generator='', sub_network='0')}
  
  
 ```
@@ -207,11 +197,7 @@ n.static_results.all_buses
 Obtaining dynamic results:
 
 ``` py
-n.dynamic_results.all_buses.marginal_price
-# ──────────────┐ ────────┐ ─────────────┐
-#               │         │              └─ Typed as `pandas.DataFrame`.
-#               │         └─ Typed as `typsa.components.bus.BusDynamicResults`.
-#               └─ Typed as `typsa.network.DynamicResults`.
+optimized_network.dynamic_results.all_buses.marginal_price
 ```
 
 ```title="Output DataFrame"
@@ -227,11 +213,11 @@ now       19.00009  35.00011
 Using PyPSA, one often needs to consult the documentation to know:
 
 - Which components are available.
-- Which attributes each component type has, which of them are inputs or outputs, and which of them are static or dynamic.
+- Which attributes each component type has, which of them are static or dynamic, which of them are inputs or outputs, and whether the outputs are the result of optimization or simulation.
 - What are the types, valid values, and defaults for each attribute.
 - Which attributes are compatible with each other.
 
-With TyPSA, `typsa.components` lists available components. Each component class lists its attributes, and their types, validation, and defaults. Different subclasses are used to separate attributes of a given component type that are not compatible with each other. For example, the [`ExtendableLine`](components/line.md#components.line.ExtendableLine) class has the [`s_nom_mod`](components/line.md#components.line.ExtendableLine.s_nom_mod) attribute, but [`Line`](components/line.md#components.line.Line) does not. Similarly, on the output side, [`ExtendableLineStaticResults`](components/line.md#components.line.ExtendableLineStaticResults) has [`s_nom_opt`](components/line.md#components.line.ExtendableLineStaticResults.s_nom_opt), but [`LineStaticResults`](components/line.md#components.line.LineStaticResults) does not.
+With TyPSA, `typsa.components` lists available components. Each component class lists its attributes, and their types, validation, and defaults. Different subclasses are used to separate attributes of a given component type that are not compatible with each other. For example, the [`ExtendableLine`](components/line.md#components.line.ExtendableLine) class has the [`s_nom_mod`](components/line.md#components.line.ExtendableLine.s_nom_mod) attribute, but [`Line`](components/line.md#components.line.Line) does not. Similarly, on the output side, [`ExtendableLineOptimizationStaticResults`](components/line.md#components.line.ExtendableLineOptimizationStaticResults) has [`s_nom_opt`](components/line.md#components.line.ExtendableLineOptimizationStaticResults.s_nom_opt), but [`LineOptimizationStaticResults`](components/line.md#components.line.LineOptimizationStaticResults) does not.
 
 ## Benefits of TyPSA
 

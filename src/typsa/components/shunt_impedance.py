@@ -43,7 +43,7 @@ class ShuntImpedance(BaseComponent):
     """Whether to consider the component as active component or not."""
 
 
-class ShuntImpedanceStaticResults(BaseStaticResults):
+class ShuntImpedanceOptimizationStaticResults(BaseStaticResults):
     g_pu: float = 0.0
     """Calculated from `g` and `n.buses.v_nom`."""
 
@@ -51,9 +51,19 @@ class ShuntImpedanceStaticResults(BaseStaticResults):
     """Calculated from `b` and `n.buses.v_nom`."""
 
 
-class ShuntImpedanceDynamicResults(BaseDynamicResults):
+class ShuntImpedanceBaseDynamicResults(BaseDynamicResults):
     p: pandas.DataFrame
     """Active power at bus (positive if net load)."""
 
+
+class ShuntImpedanceOptimizationDynamicResults(ShuntImpedanceBaseDynamicResults):
+    pass
+
+
+class ShuntImpedancePfDynamicResults(ShuntImpedanceBaseDynamicResults):
+    pass
+
+
+class ShuntImpedanceNonlinearPfDynamicResults(ShuntImpedancePfDynamicResults):
     q: pandas.DataFrame
     """Reactive power (positive if net generation)."""

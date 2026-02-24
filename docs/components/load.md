@@ -10,4 +10,9 @@
       show_root_toc_entry: false
       show_signature_annotations: true
       show_source: false
-      members: ['Load', 'LoadDynamicResults']
+      members:
+        - Load
+        - LoadBaseDynamicResults
+        - LoadOptimizationDynamicResults
+        - LoadPfDynamicResults
+        - LoadNonlinearPfDynamicResults

@@ -114,18 +114,17 @@ class ExtendableStore(BaseStore):
     """Fixed period costs of extending `e_nom` by 1 MWh, including periodized investment costs and periodic fixed O&M costs (e.g. annuitized investment costs)."""
 
 
-class ExtendableStoreStaticResults(BaseStaticResults):
+class ExtendableStoreOptimizationStaticResults(BaseStaticResults):
     e_nom_opt: float = 0.0
     """Optimised nominal energy capacity outputted by optimisation."""
 
 
-class StoreDynamicResults(BaseDynamicResults):
+class StoreBaseDynamicResults(BaseDynamicResults):
     p: pandas.DataFrame
     """Power at bus (positive if net supply)."""
 
-    q: pandas.DataFrame
-    """Reactive power (positive if net supply)."""
 
+class StoreOptimizationDynamicResults(StoreBaseDynamicResults):
     e: pandas.DataFrame
     """Energy level of store as calculated by the optimisation."""
 
@@ -137,3 +136,12 @@ class StoreDynamicResults(BaseDynamicResults):
 
     mu_energy_balance: pandas.DataFrame
     """Shadow price of storage consistency equations (i.e. water values)."""
+
+
+class StorePfDynamicResults(StoreBaseDynamicResults):
+    pass
+
+
+class StoreNonlinearPfDynamicResults(StorePfDynamicResults):
+    q: pandas.DataFrame
+    """Reactive power (positive if net supply)."""

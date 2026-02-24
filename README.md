@@ -12,9 +12,9 @@ TyPSA is a wrapper around the [PyPSA Python library for power systems analysis](
 
 TyPSA provides:
 
-- Classes for defining components of different types (`Bus`, `Load`, etc.) with their input data.
-- A subclass of `pypsa.Network` &mdash; `typsa.Network` &mdash; to which components can be added. Optimizations and power flow simulations can be run using `typsa.Network.optimize()`, `typsa.Network.pf()`, etc.
-- Accessors for obtaining static and dynamic model outputs (e.g., `typsa.Network.static_results.extendable_generators["g1"].p_nom_opt`).
+- Classes for defining [components](components/index.md) of different types ([`Bus`](components/bus.md), [`Load`](components/load.md), etc.) with their input data.
+- APIs for defining a network, creating its optimization model, optimizing the network, and simulating power flow.
+- Accessors for obtaining static and dynamic results of optimization and simulation.
 
 ## Usage Example
 
@@ -24,7 +24,7 @@ Example from [PyPSA Quickstart 1 &ndash; Markets](https://docs.pypsa.org/latest/
 import typsa
 from typsa.components import Bus, CustomLineParameters, Generator, Line, Load
 
-n = typsa.Network()
+network = typsa.Network()
 
 zone_1 = Bus(name="zone_1")
 zone_2 = Bus(name="zone_2")
@@ -63,15 +63,15 @@ line = Line(
     s_nom=400,
 )
 
-n.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
+network.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
 
-n.optimize()
+optimized_network = network.model().optimize()
 
-n.static_results.all_buses
-# {'zone_1': BusStaticResults(control='Slack', generator='gen_1', sub_network='0'),
-#  'zone_2': BusStaticResults(control='PQ', generator='', sub_network='0')}
+optimized_network.static_results.all_buses
+# {'zone_1': BusOptimizationStaticResults(control='Slack', generator='gen_1', sub_network='0'),
+#  'zone_2': BusOptimizationStaticResults(control='PQ', generator='', sub_network='0')}
 
-n.dynamic_results.all_buses.marginal_price
+optimized_network.dynamic_results.all_buses.marginal_price
 # name        zone_1    zone_2
 # snapshot
 # now       19.00009  35.00011

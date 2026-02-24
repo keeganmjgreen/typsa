@@ -54,7 +54,7 @@ class Bus(BaseComponent):
     """Voltage magnitude set point, per unit of `v_nom`."""
 
 
-class BusStaticResults(BaseStaticResults):
+class BusOptimizationStaticResults(BaseStaticResults):
     control: ControlType = "PQ"
     """P,Q,V control strategy for power flow, must be "PQ", "PV" or "Slack". Note that this attribute is an output inherited from the controls of the generators attached to the bus."""
 
@@ -65,18 +65,24 @@ class BusStaticResults(BaseStaticResults):
     """Name of connected sub-network to which bus belongs. This attribute is set by `n.determine_network_topology()`."""
 
 
-class BusDynamicResults(BaseDynamicResults):
+class _BusDynamicResults(BaseDynamicResults):
     p: pandas.DataFrame
     """Active power at bus (positive if net generation at bus)."""
 
-    q: pandas.DataFrame
-    """Reactive power (positive if net generation at bus)."""
 
+class BusOptimizationDynamicResults(_BusDynamicResults):
+    marginal_price: pandas.DataFrame
+    """Shadow price from energy balance constraint."""
+
+
+class BusPfDynamicResults(_BusDynamicResults):
     v_mag_pu: pandas.DataFrame
     """Voltage magnitude, per unit of `v_nom`."""
 
     v_ang: pandas.DataFrame
     """Voltage angle."""
 
-    marginal_price: pandas.DataFrame
-    """Shadow price from energy balance constraint."""
+
+class BusNonlinearPfDynamicResults(BusPfDynamicResults):
+    q: pandas.DataFrame
+    """Reactive power (positive if net generation at bus)."""

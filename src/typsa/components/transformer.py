@@ -115,7 +115,7 @@ class ExtendableTransformer(BaseTransformer):
     """Set value of `s_nom_opt`."""
 
 
-class TransformerStaticResults(BaseStaticResults):
+class TransformerOptimizationStaticResults(BaseStaticResults):
     sub_network: str
     """Name of connected sub-network to which transformer belongs, as calculated by `n.determine_network_topology()`."""
 
@@ -138,26 +138,36 @@ class TransformerStaticResults(BaseStaticResults):
     """Effective per unit series resistance for linear power flow, calculated by `n.calculate_dependent_values()` from `x`, `tap_ratio` for transformers and `n.buses.v_nom`."""
 
 
-class ExtendableTransformerStaticResults(TransformerStaticResults):
+class ExtendableTransformerOptimizationStaticResults(
+    TransformerOptimizationStaticResults
+):
     s_nom_opt: float = 0.0
     """Optimised nominal capacity for apparent power."""
 
 
-class TransformerDynamicResults(BaseDynamicResults):
+class TransformerBaseDynamicResults(BaseDynamicResults):
     p0: pandas.DataFrame
     """Active power at `bus0` (positive if branch is withdrawing power from `bus0`)."""
-
-    q0: pandas.DataFrame
-    """Reactive power at `bus0` (positive if branch is withdrawing power from `bus0`)."""
 
     p1: pandas.DataFrame
     """Active power at `bus1` (positive if branch is withdrawing power from `bus1`)."""
 
-    q1: pandas.DataFrame
-    """Reactive power at `bus1` (positive if branch is withdrawing power from `bus1`)."""
 
+class TransformerOptimizationDynamicResults(TransformerBaseDynamicResults):
     mu_lower: pandas.DataFrame
     """Shadow price of lower `s_nom` limit. Always non-negative."""
 
     mu_upper: pandas.DataFrame
     """Shadow price of upper `s_nom` limit. Always non-negative."""
+
+
+class TransformerPfDynamicResults(TransformerBaseDynamicResults):
+    pass
+
+
+class TransformerNonlinearPfDynamicResults(TransformerPfDynamicResults):
+    q0: pandas.DataFrame
+    """Reactive power at `bus0` (positive if branch is withdrawing power from `bus0`)."""
+
+    q1: pandas.DataFrame
+    """Reactive power at `bus1` (positive if branch is withdrawing power from `bus1`)."""

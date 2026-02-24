@@ -1,24 +1,24 @@
 import pypsa
 
-n = pypsa.Network()
+network = pypsa.Network()
 
-n.add("Bus", name="zone_1")
-n.add("Bus", name="zone_2")
+network.add("Bus", name="zone_1")
+network.add("Bus", name="zone_2")
 
-n.add(
+network.add(
     "Load",
     name="load_1",
     bus="zone_1",
     p_set=500,
 )
-n.add(
+network.add(
     "Load",
     name="load_2",
     bus="zone_2",
     p_set=1500,
 )
 
-n.add(
+network.add(
     "Generator",
     name="gen_1",
     bus="zone_1",
@@ -26,7 +26,7 @@ n.add(
     marginal_cost=10,
     marginal_cost_quadratic=0.005,
 )
-n.add(
+network.add(
     "Generator",
     name="gen_2",
     bus="zone_2",
@@ -35,7 +35,7 @@ n.add(
     marginal_cost_quadratic=0.01,
 )
 
-n.add(
+network.add(
     "Line",
     "line_1",
     bus0="zone_1",
@@ -44,8 +44,8 @@ n.add(
     s_nom=400,
 )
 
-n.optimize()
+network.optimize()
 
-n.buses
+network.buses
 
-n.buses_t["marginal_price"]
+network.buses_t["marginal_price"]

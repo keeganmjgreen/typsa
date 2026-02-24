@@ -42,9 +42,19 @@ class Load(BaseComponent):
     """Whether to consider the component in optimisation or not."""
 
 
-class LoadDynamicResults(BaseDynamicResults):
+class LoadBaseDynamicResults(BaseDynamicResults):
     p: pandas.DataFrame
     """Active power at bus (positive if net load)."""
 
+
+class LoadOptimizationDynamicResults(LoadBaseDynamicResults):
+    pass
+
+
+class LoadPfDynamicResults(LoadBaseDynamicResults):
+    pass
+
+
+class LoadNonlinearPfDynamicResults(LoadPfDynamicResults):
     q: pandas.DataFrame
     """Reactive power (positive if net load)."""

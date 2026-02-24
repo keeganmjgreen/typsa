@@ -12,4 +12,9 @@ Use the [`Bus`](#components.bus.Bus) class to represent a node that other types 
       show_root_toc_entry: false
       show_signature_annotations: true
       show_source: false
-      members: ['Bus', 'BusStaticResults', 'BusDynamicResults']
+      members:
+        - Bus
+        - BusOptimizationStaticResults
+        - BusOptimizationDynamicResults
+        - BusPfDynamicResults
+        - BusNonlinearPfDynamicResults

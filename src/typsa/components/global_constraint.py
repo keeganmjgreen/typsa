@@ -47,6 +47,6 @@ class GlobalConstraint(BaseComponent):
     """Constant for right-hand-side of constraint for optimisation period. For a CO₂ constraint, this would be tonnes of CO₂."""
 
 
-class GlobalConstraintStaticResults(BaseStaticResults):
+class GlobalConstraintOptimizationStaticResults(BaseStaticResults):
     mu: float = 0.0
     """Shadow price of global constraint."""

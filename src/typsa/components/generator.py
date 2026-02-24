@@ -152,18 +152,17 @@ class CommittableGenerator(Generator):
     """Maximum active power decrease at shut down, per unit of the nominal power."""
 
 
-class ExtendableGeneratorStaticResults(BaseStaticResults):
+class ExtendableGeneratorOptimizationStaticResults(BaseStaticResults):
     p_nom_opt: float = 0.0
     """Optimised nominal capacity."""
 
 
-class GeneratorDynamicResults(BaseDynamicResults):
+class GeneratorBaseDynamicResults(BaseDynamicResults):
     p: pandas.DataFrame
     """Active power at bus (positive if net generation)."""
 
-    q: pandas.DataFrame
-    """Reactive power (positive if net generation)."""
 
+class GeneratorOptimizationDynamicResults(GeneratorBaseDynamicResults):
     mu_upper: pandas.DataFrame
     """Shadow price of upper `p_nom` limit."""
 
@@ -180,7 +179,9 @@ class GeneratorDynamicResults(BaseDynamicResults):
     """Shadow price of lower ramp down limit."""
 
 
-class CommittableGeneratorDynamicResults(GeneratorDynamicResults):
+class CommittableGeneratorOptimizationDynamicResults(
+    GeneratorOptimizationDynamicResults
+):
     status: pandas.DataFrame
     """Status in the snapshot (1 is on, 0 is off)."""
 
@@ -189,3 +190,12 @@ class CommittableGeneratorDynamicResults(GeneratorDynamicResults):
 
     shut_down: pandas.DataFrame
     """Whether the unit was shut down in the snapshot (1 is yes, 0 is no)."""
+
+
+class GeneratorPfDynamicResults(GeneratorBaseDynamicResults):
+    pass
+
+
+class GeneratorNonlinearPfDynamicResults(GeneratorPfDynamicResults):
+    q: pandas.DataFrame
+    """Reactive power (positive if net generation)."""
