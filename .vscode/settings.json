@@ -27,6 +27,7 @@
         "mathjax",
         "mkdocs",
         "mkdocstrings",
+        "nbconvert",
         "optimisation",
         "Optimised",
         "periodized",
