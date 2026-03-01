@@ -8,6 +8,7 @@ import pandas
 from pydantic import Field
 
 from typsa.literal_types import ControlType, SignType
+from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
     BaseComponent,
@@ -16,7 +17,9 @@ from ._base_component import (
 )
 
 
-class BaseStorageUnit(BaseComponent):
+class BaseStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseComponent[T]
+):
     """Storage units enable inter-temporal energy shifting with fixed nominal-energy-to-nominal-power ratio.
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/storage_units/)
@@ -36,22 +39,22 @@ class BaseStorageUnit(BaseComponent):
     p_nom_extendable: bool
     """Switch to allow capacity `p_nom` to be extended in optimisation."""
 
-    p_min_pu: float = Field(default=-1.0, ge=-1.0, le=1.0)
+    p_min_pu: float | Series[T] = Field(default=-1.0, ge=-1.0, le=1.0)
     """The minimum output for each snapshot per unit of `p_nom` for the optimisation. Negative sign implies storing mode withdrawing power from bus."""
 
-    p_max_pu: float = Field(default=1.0, ge=-1.0, le=1.0)
+    p_max_pu: float | Series[T] = Field(default=1.0, ge=-1.0, le=1.0)
     """The maximum output for each snapshot per unit of `p_nom` for the optimisation. Positive sign implies discharging mode injecting power into bus."""
 
-    p_set: float | None = None
+    p_set: float | Series[T] | None = None
     """Active power set point (for power flow only)"""
 
-    q_set: float = 0.0
+    q_set: float | Series[T] = 0.0
     """Reactive power set point (for power flow only)"""
 
-    p_dispatch_set: float | None = None
+    p_dispatch_set: float | Series[T] | None = None
     """Active power dispatch set point (for optimisation only)"""
 
-    p_store_set: float | None = None
+    p_store_set: float | Series[T] | None = None
     """Active power charging set point (for optimisation only)"""
 
     sign: SignType = +1
@@ -60,16 +63,16 @@ class BaseStorageUnit(BaseComponent):
     carrier: str | None = Field(default=None, min_length=1)
     """Prime mover energy carrier (e.g. coal, gas, wind, solar); required for global constraints on primary energy in optimisation"""
 
-    spill_cost: float = 0.0
+    spill_cost: float | Series[T] = 0.0
     """Cost of spilling 1 MWh"""
 
-    marginal_cost: float = Field(default=0.0, ge=0.0)
+    marginal_cost: float | Series[T] = Field(default=0.0, ge=0.0)
     """Marginal cost of production (discharge) of 1 MWh."""
 
-    marginal_cost_quadratic: float = Field(default=0.0, ge=0.0)
+    marginal_cost_quadratic: float | Series[T] = Field(default=0.0, ge=0.0)
     """Quadratic marginal cost of production (discharge) of 1 MWh."""
 
-    marginal_cost_storage: float = Field(default=0.0, ge=0.0)
+    marginal_cost_storage: float | Series[T] = Field(default=0.0, ge=0.0)
     """Marginal cost of energy storage of 1 MWh for one hour."""
 
     active: bool = True
@@ -87,7 +90,7 @@ class BaseStorageUnit(BaseComponent):
     state_of_charge_initial_per_period: bool = False
     """Switch: if True, the state of charge at the beginning of an investment period is set to `state_of_charge_initial`."""
 
-    state_of_charge_set: float | None = Field(default=None, ge=0.0, le=1.0)
+    state_of_charge_set: float | Series[T] | None = Field(default=None, ge=0.0, le=1.0)
     """State of charge set points for snapshots in the optimisation."""
 
     cyclic_state_of_charge: bool = False
@@ -99,27 +102,31 @@ class BaseStorageUnit(BaseComponent):
     max_hours: float = Field(gt=0.0)
     """Maximum state of charge capacity in terms of hours at full output power capacity `p_nom`."""
 
-    efficiency_store: float = Field(default=1.0, gt=0.0, le=1.0)
+    efficiency_store: float | Series[T] = Field(default=1.0, gt=0.0, le=1.0)
     """Efficiency of storage on the way into the storage."""
 
-    efficiency_dispatch: float = Field(default=1.0, gt=0.0, le=1.0)
+    efficiency_dispatch: float | Series[T] = Field(default=1.0, gt=0.0, le=1.0)
     """Efficiency of storage on the way out of the storage."""
 
-    standing_loss: float = Field(default=0.0, ge=0.0)
+    standing_loss: float | Series[T] = Field(default=0.0, ge=0.0)
     """Losses per hour to state of charge."""
 
-    inflow: float = Field(default=0.0, ge=0.0)
+    inflow: float | Series[T] = Field(default=0.0, ge=0.0)
     """Inflow to the state of charge (e.g. due to river inflow in hydro reservoir)."""
 
 
-class StorageUnit(BaseStorageUnit):
+class StorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseStorageUnit[T]
+):
     p_nom: float | None = Field(default=None, gt=0.0)
     """Nominal power for limits on `p` in optimisation."""
 
     p_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
-class ExtendableStorageUnit(BaseStorageUnit):
+class ExtendableStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseStorageUnit[T]
+):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal power of the storage unit module. Introduces integer variables if set."""
 

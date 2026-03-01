@@ -6,10 +6,12 @@ from typing import ClassVar
 
 from pydantic import Field
 
+from typsa.time_variation import Static
+
 from ._base_component import BaseComponent
 
 
-class Carrier(BaseComponent):
+class Carrier(BaseComponent[Static]):
     """Energy carriers of buses (e.g. "AC" for alternating current, "DC" for direct current, "hydrogen", or "heat") or technologies of other components (e.g. "wind", "gas turbine", "electrolyser", or "heat pump").
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/carriers/)

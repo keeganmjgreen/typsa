@@ -8,6 +8,7 @@ import pandas
 from pydantic import Field
 
 from typsa.literal_types import ControlType, SignType
+from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
     BaseComponent,
@@ -16,7 +17,9 @@ from ._base_component import (
 )
 
 
-class BaseGenerator(BaseComponent):
+class BaseGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseComponent[T]
+):
     """Power generator for the bus carrier it attaches to.
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/generators/)
@@ -36,13 +39,13 @@ class BaseGenerator(BaseComponent):
     p_nom_extendable: bool
     """Switch to allow capacity `p_nom` to be extended in optimization."""
 
-    p_min_pu: float = Field(default=0.0, ge=0.0, le=1.0)
+    p_min_pu: float | Series[T] = Field(default=0.0, ge=0.0, le=1.0)
     """The minimum output for each snapshot per unit of `p_nom` for the optimization (e.g. a minimal dispatch level for conventional power plants). Note that if `committable=False` and `p_min_pu>0`, this represents a must-run condition."""
 
-    p_max_pu: float = Field(default=1.0, ge=0.0, le=1.0)
+    p_max_pu: float | Series[T] = Field(default=1.0, ge=0.0, le=1.0)
     """The maximum output for each snapshot per unit of `p_nom` for the optimization (e.g. changing availability of renewable generators due to weather conditions or a de-rating of conventional power plants)."""
 
-    p_set: float | None = None
+    p_set: float | Series[T] | None = None
     """Active power set point (for optimisation and power flow)."""
 
     e_sum_min: float | None = None
@@ -51,7 +54,7 @@ class BaseGenerator(BaseComponent):
     e_sum_max: float | None = None
     """The maximum total energy produced during a single optimization horizon."""
 
-    q_set: float = 0.0
+    q_set: float | Series[T] = 0.0
     """Reactive power set point (for power flow)."""
 
     sign: SignType = +1
@@ -60,10 +63,10 @@ class BaseGenerator(BaseComponent):
     carrier: str | None = Field(default=None, min_length=1)
     """Prime mover energy carrier (e.g. coal, gas, wind, solar); required for global constraints on primary energy in optimisation."""
 
-    marginal_cost: float = Field(default=0.0)
+    marginal_cost: float | Series[T] = Field(default=0.0)
     """Marginal cost of production of 1 MWh."""
 
-    marginal_cost_quadratic: float = Field(default=0.0)
+    marginal_cost_quadratic: float | Series[T] = Field(default=0.0)
     """Quadratic marginal cost of production of 1 MWh."""
 
     active: bool = True
@@ -75,26 +78,28 @@ class BaseGenerator(BaseComponent):
     lifetime: float | None = Field(default=None, gt=0.0)
     """Lifetime of the generator."""
 
-    efficiency: float = Field(default=1.0, gt=0.0, le=1.0)
+    efficiency: float | Series[T] = Field(default=1.0, gt=0.0, le=1.0)
     """Ratio output and primary energy carrier input (e.g. 0.4 MWh_elec/MWh_fuel). This is required for global constraints on primary energy in optimization."""
 
     committable: bool
     """Apply unit commitment constraints. This is only possible with `p_nom_extendable=False`."""
 
-    stand_by_cost: float = Field(default=0.0, ge=0.0)
+    stand_by_cost: float | Series[T] = Field(default=0.0, ge=0.0)
     """Stand-by cost for running the generator. This cost is incurred whenever the status is 1 (including when the dispatch decision is zero)."""
 
-    ramp_limit_up: float | None = Field(default=None, gt=0.0, le=1.0)
+    ramp_limit_up: float | Series[T] | None = Field(default=None, gt=0.0, le=1.0)
     """Maximum active power increase from one snapshot to the next, per unit of the nominal power. Does not consider snapshot weightings."""
 
-    ramp_limit_down: float | None = Field(default=None, gt=0.0, le=1.0)
+    ramp_limit_down: float | Series[T] | None = Field(default=None, gt=0.0, le=1.0)
     """Maximum active power decrease from one snapshot to the next, per unit of the nominal power. Does not consider snapshot weightings."""
 
     weight: float = 1.0
     """Weighting of a generator. Only used for network clustering."""
 
 
-class Generator(BaseGenerator):
+class Generator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseGenerator[T]
+):
     p_nom: float | None = Field(default=None, gt=0.0)
     """Nominal power for limits  on `p` in optimization."""
 
@@ -103,7 +108,9 @@ class Generator(BaseGenerator):
     committable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
-class ExtendableGenerator(BaseGenerator):
+class ExtendableGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseGenerator[T]
+):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal power of the generator module (e.g. fixed unit size of a nuclear power plant). Introduces integer variables if set."""
 
@@ -124,7 +131,9 @@ class ExtendableGenerator(BaseGenerator):
     committable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
-class CommittableGenerator(Generator):
+class CommittableGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    Generator[T]
+):
     committable: Literal[True] = True  # pyright: ignore[reportIncompatibleVariableOverride]
 
     start_up_cost: float = Field(default=0.0, ge=0.0)

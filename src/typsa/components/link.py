@@ -7,6 +7,8 @@ from typing import ClassVar, Literal
 import pandas
 from pydantic import BaseModel, Field
 
+from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
+
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
@@ -20,7 +22,9 @@ class BusConnection(BaseModel):
     efficiency: float = Field(default=1.0, gt=0.0, le=1.0)
 
 
-class BaseLink(BaseComponent):
+class BaseLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseComponent[T]
+):
     """Links are used for controllable directed flows between two or more buses with a flexible energy carriers (e.g. HVDC links, converters, conversions between carriers).
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/links/)
@@ -40,7 +44,7 @@ class BaseLink(BaseComponent):
     carrier: str | None = Field(default=None, min_length=1)
     """Carrier of the link describing its technology (e.g. gas boiler, electrolyser, HVDC link)."""
 
-    efficiency: float = Field(default=1.0, gt=0.0, le=1.0)
+    efficiency: float | Series[T] = Field(default=1.0, gt=0.0, le=1.0)
     """Efficiency of energy transfer from `bus0` to `bus1`. Can be time-dependent (e.g. to represent temperature-dependent heat pump COP)."""
 
     active: bool = True
@@ -55,22 +59,22 @@ class BaseLink(BaseComponent):
     p_nom_extendable: bool
     """Switch to allow capacity `p_nom` to be extended."""
 
-    p_set: float | None = None
+    p_set: float | Series[T] | None = None
     """The dispatch set point for `p0` of the link (for optimisation and power flow)."""
 
-    p_min_pu: float = Field(default=0.0, ge=-1.0, le=1.0)
+    p_min_pu: float | Series[T] = Field(default=0.0, ge=-1.0, le=1.0)
     """Minimal dispatch per unit of `p_nom` for the link. Can also be negative."""
 
-    p_max_pu: float = Field(default=1.0, ge=-1.0, le=1.0)
+    p_max_pu: float | Series[T] = Field(default=1.0, ge=-1.0, le=1.0)
     """Maximal dispatch per unit of `p_nom` for the link. Can also be negative."""
 
-    marginal_cost: float = Field(default=0.0, ge=0.0)
+    marginal_cost: float | Series[T] = Field(default=0.0, ge=0.0)
     """Marginal cost of 1 MWh consumption from `bus0` (e.g. including variable operation and maintenance costs of an electrolyser but excluding electricity costs)."""
 
-    marginal_cost_quadratic: float = Field(default=0.0, ge=0.0)
+    marginal_cost_quadratic: float | Series[T] = Field(default=0.0, ge=0.0)
     """Quadratic marginal cost for 1 MWh of consumption from `bus0`."""
 
-    stand_by_cost: float = Field(default=0.0, ge=0.0)
+    stand_by_cost: float | Series[T] = Field(default=0.0, ge=0.0)
     """Stand-by cost for operating the link. This cost is incurred whenever the status is 1 (including when dispatch decision is zero)."""
 
     length: float = Field(default=0.0, ge=0.0)
@@ -82,10 +86,10 @@ class BaseLink(BaseComponent):
     committable: bool
     """Apply unit commitment constraints. This is only possible with `p_nom_extendable=False`."""
 
-    ramp_limit_up: float | None = Field(default=None, gt=0.0, le=1.0)
+    ramp_limit_up: float | Series[T] | None = Field(default=None, gt=0.0, le=1.0)
     """Maximum increase from one snapshot to the next, per unit of `p_nom`. Does not consider snapshot weightings."""
 
-    ramp_limit_down: float | None = Field(default=None, gt=0.0, le=1.0)
+    ramp_limit_down: float | Series[T] | None = Field(default=None, gt=0.0, le=1.0)
     """Maximum decrease from one snapshot to the next, per unit of `p_nom`. Does not consider snapshot weightings."""
 
     additional_bus_connections: dict[_BusName, BusConnection] = Field(
@@ -93,7 +97,7 @@ class BaseLink(BaseComponent):
     )
 
 
-class Link(BaseLink):
+class Link[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseLink[T]):
     p_nom: float | None = Field(default=None, gt=0.0)
     """Limit of power which can pass through link (in units of `bus0`)."""
 
@@ -102,7 +106,9 @@ class Link(BaseLink):
     committable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
-class ExtendableLink(BaseLink):
+class ExtendableLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseLink[T]
+):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Unit size of link module (e.g. fixed blocks of 100 MW)."""
 
@@ -117,13 +123,15 @@ class ExtendableLink(BaseLink):
     p_nom_set: float | None = Field(default=None, ge=0.0)
     """Set value of `p_nom_opt`."""
 
-    capital_cost: float = Field(default=0.0, ge=0.0)
+    capital_cost: float | Series[T] = Field(default=0.0, ge=0.0)
     """Fixed period costs of extending `p_nom` by 1 MW (unit of `bus0`), including periodized investment costs and periodic fixed O&M costs (e.g. annuitized investment costs). Any `length` factor must already be included here."""
 
     committable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
-class CommittableLink(Link):
+class CommittableLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    Link[T]
+):
     committable: Literal[True] = True  # pyright: ignore[reportIncompatibleVariableOverride]
 
     start_up_cost: float = Field(default=0.0, ge=0.0)

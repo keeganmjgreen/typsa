@@ -37,6 +37,8 @@
         "pypsa",
         "superfences",
         "susceptance",
+        "timedelta",
+        "tseries",
         "typsa",
         "venv",
         "visualisations",

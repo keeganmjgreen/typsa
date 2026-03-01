@@ -8,6 +8,7 @@ import pandas
 from pydantic import BaseModel, Field
 
 from typsa.standard_types import StandardTransformerType
+from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
     BaseComponent,
@@ -50,7 +51,9 @@ class StandardTransformerParameters(BaseModel):
     """Determines position relative to the neutral tap position."""
 
 
-class BaseTransformer(BaseComponent):
+class BaseTransformer[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseComponent[T]
+):
     """2-winding transformer.
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/transformers/)
@@ -76,7 +79,7 @@ class BaseTransformer(BaseComponent):
     s_nom_extendable: bool
     """Switch to allow capacity `s_nom` to be extended in optimisation."""
 
-    s_max_pu: float = Field(default=1.0, ge=0.0, le=1.0)
+    s_max_pu: float | Series[T] = Field(default=1.0, ge=0.0, le=1.0)
     """The maximum allowed absolute flow per unit of `s_nom` for the optimisation."""
 
     capital_cost: float = Field(default=0.0, ge=0.0)
@@ -92,14 +95,18 @@ class BaseTransformer(BaseComponent):
     """Lifetime of transformer."""
 
 
-class Transformer(BaseTransformer):
+class Transformer[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseTransformer[T]
+):
     s_nom: float = Field(default=0.0, ge=0.0)
     """Limit of apparent power which can pass through branch in either direction."""
 
     s_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
-class ExtendableTransformer(BaseTransformer):
+class ExtendableTransformer[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseTransformer[T]
+):
     s_nom_mod: float = Field(default=0.0, ge=0.0)
     """Modular unit size of transformer expansion of `s_nom`. Introduces integer variables."""
 

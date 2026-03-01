@@ -8,6 +8,7 @@ import pandas
 from pydantic import Field
 
 from typsa.literal_types import SignType
+from typsa.time_variation import Static
 
 from ._base_component import (
     BaseComponent,
@@ -16,7 +17,7 @@ from ._base_component import (
 )
 
 
-class ShuntImpedance(BaseComponent):
+class ShuntImpedance(BaseComponent[Static]):
     """Shunt with voltage-dependent admittance.
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/shunt_impedances/)

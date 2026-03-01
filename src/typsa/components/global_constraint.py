@@ -6,6 +6,8 @@ from typing import ClassVar, Literal
 
 from pydantic import Field
 
+from typsa.time_variation import Static
+
 from ._base_component import BaseComponent, BaseStaticResults
 
 type GlobalConstraintType = Literal[
@@ -17,7 +19,7 @@ type GlobalConstraintType = Literal[
 ]
 
 
-class GlobalConstraint(BaseComponent):
+class GlobalConstraint(BaseComponent[Static]):
     """Constraints in the optimisation problem that apply to multiple components at once.
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/global_constraints/)

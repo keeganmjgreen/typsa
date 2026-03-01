@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from typsa.time_variation import Static
+
 from ._base_component import BaseComponent, BaseStaticResults
 
 
-class SubNetwork(BaseComponent):
+class SubNetwork(BaseComponent[Static]):
     """Subsets of buses and passive branches (i.e. lines and transformers) that are connected (i.e. synchronous areas).
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/sub-networks/)

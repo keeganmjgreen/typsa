@@ -8,11 +8,14 @@ import pandas
 from pydantic import Field
 
 from typsa.literal_types import SignType
+from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import BaseComponent, BaseDynamicResults
 
 
-class Load(BaseComponent):
+class Load[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseComponent[T]
+):
     """Loads represent a demand at the bus they are connected to (e.g. PQ power consumer).
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/loads/)
@@ -29,10 +32,10 @@ class Load(BaseComponent):
     carrier: str | None = Field(default=None, min_length=1)
     """Carrier of the load."""
 
-    p_set: float = 0.0
+    p_set: float | Series[T] = 0.0
     """Active power consumption (positive if the load is consuming power)."""
 
-    q_set: float = 0.0
+    q_set: float | Series[T] = 0.0
     """Reactive power consumption (positive if the load is inductive)."""
 
     sign: SignType = -1

@@ -8,6 +8,7 @@ import pandas
 from pydantic import Field
 
 from typsa.literal_types import SignType
+from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
     BaseComponent,
@@ -16,7 +17,9 @@ from ._base_component import (
 )
 
 
-class BaseStore(BaseComponent):
+class BaseStore[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseComponent[T]
+):
     """Stores provide fundamental inter-temporal storage functionality not limited in charging or discharging power.
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/stores/)
@@ -36,10 +39,10 @@ class BaseStore(BaseComponent):
     e_nom_extendable: bool
     """Switch to allow capacity `e_nom` to be extended in optimisation."""
 
-    e_min_pu: float = Field(default=0.0, ge=0.0, le=1.0)
+    e_min_pu: float | Series[T] = Field(default=0.0, ge=0.0, le=1.0)
     """Minimal value of `e` relative to `e_nom` for the optimisation."""
 
-    e_max_pu: float = Field(default=1.0, ge=0.0, le=1.0)
+    e_max_pu: float | Series[T] = Field(default=1.0, ge=0.0, le=1.0)
     """Maximal value of `e` relative to `e_nom` for the optimisation."""
 
     e_initial: float = Field(default=0.0, ge=0.0)
@@ -54,28 +57,28 @@ class BaseStore(BaseComponent):
     e_cyclic_per_period: bool = False
     """Switch: if True, then the cyclic constraints are applied to each investment period separately."""
 
-    p_set: float | None = Field(default=None, ge=0.0)
+    p_set: float | Series[T] | None = Field(default=None, ge=0.0)
     """Active power set point (for power flow only)."""
 
-    q_set: float = Field(default=0.0, ge=0.0)
+    q_set: float | Series[T] = Field(default=0.0, ge=0.0)
     """Reactive power set point (for power flow only)."""
 
-    e_set: float | None = Field(default=None, ge=0.0)
+    e_set: float | Series[T] | None = Field(default=None, ge=0.0)
     """Fixed energy filling level set point (for optimisation only)."""
 
     sign: SignType = +1
     """Sign denoting orientation of the energy variable (`e`)."""
 
-    marginal_cost: float = Field(default=0.0, ge=0.0)
+    marginal_cost: float | Series[T] = Field(default=0.0, ge=0.0)
     """Marginal cost applied to both charging and discharging of 1 MWh."""
 
-    marginal_cost_quadratic: float = Field(default=0.0, ge=0.0)
+    marginal_cost_quadratic: float | Series[T] = Field(default=0.0, ge=0.0)
     """Quadratic marginal cost of applied to charging and discharging of 1 MWh."""
 
-    marginal_cost_storage: float = Field(default=0.0, ge=0.0)
+    marginal_cost_storage: float | Series[T] = Field(default=0.0, ge=0.0)
     """Marginal cost of energy storage of 1 MWh for one hour."""
 
-    standing_loss: float = Field(default=0.0, ge=0.0)
+    standing_loss: float | Series[T] = Field(default=0.0, ge=0.0)
     """Losses per hour to energy level."""
 
     active: bool = True
@@ -88,14 +91,16 @@ class BaseStore(BaseComponent):
     """Lifetime."""
 
 
-class Store(BaseStore):
+class Store[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseStore[T]):
     e_nom: float = Field(default=0.0, ge=0.0)
     """Nominal energy capacity (i.e. limit on `e`)."""
 
     e_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
-class ExtendableStore(BaseStore):
+class ExtendableStore[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseStore[T]
+):
     e_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal energy capacity of the store module. Introduces integer variables if set."""
 

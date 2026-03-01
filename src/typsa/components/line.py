@@ -8,6 +8,7 @@ import pandas
 from pydantic import BaseModel, Field
 
 from typsa.standard_types import StandardLineType
+from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
     BaseComponent,
@@ -41,7 +42,9 @@ class StandardLineParameters(BaseModel):
     """Number of parallel circuits. Can also be fractional."""
 
 
-class BaseLine(BaseComponent):
+class BaseLine[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseComponent[T]
+):
     """Lines include distribution and transmission lines, overhead lines and cables.
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/lines/)
@@ -64,7 +67,7 @@ class BaseLine(BaseComponent):
     s_nom_extendable: bool
     """Switch to allow capacity `s_nom` to be extended in optimisation."""
 
-    s_max_pu: float = Field(default=1.0, ge=0.0, le=1.0)
+    s_max_pu: float | Series[T] = Field(default=1.0, ge=0.0, le=1.0)
     """The maximum allowed absolute apparent power flow per unit of `s_nom` for the optimisation (e.g. can set `s_max_pu<1` to approximate $N-1$ contingency factor, or can be time-varying to represent weather-dependent dynamic line rating for overhead lines)."""
 
     capital_cost: float = Field(default=0.0, ge=0.0)
@@ -86,14 +89,16 @@ class BaseLine(BaseComponent):
     """Terrain factor for increasing `length` for `capital_cost` calculation."""
 
 
-class Line(BaseLine):
+class Line[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseLine[T]):
     s_nom: float = Field(default=0.0, ge=0.0)
     """Limit of apparent power which can pass through branch in either direction."""
 
     s_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
-class ExtendableLine(BaseLine):
+class ExtendableLine[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    BaseLine[T]
+):
     s_nom_mod: float = Field(default=0.0, ge=0.0)
     """Modular unit size of line expansion of `s_nom` (e.g. fixed rating of added circuit). Introduces integer variables."""
 

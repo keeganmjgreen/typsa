@@ -8,6 +8,7 @@ import pandas
 from pydantic import BaseModel, Field
 
 from typsa.literal_types import ControlType
+from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
     BaseComponent,
@@ -24,7 +25,7 @@ class Coordinates(BaseModel):
     """Latitude."""
 
 
-class Bus(BaseComponent):
+class Bus[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseComponent[T]):
     """Fundamental node where all components attach.
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/buses/)
@@ -50,7 +51,7 @@ class Bus(BaseComponent):
     location: str | None = None
     """Location of the bus. Does not influence the optimisation model but can be used for aggregation with `n.statistics`."""
 
-    v_mag_pu_set: float = 1.0
+    v_mag_pu_set: float | Series[T] = 1.0
     """Voltage magnitude set point, per unit of `v_nom`."""
 
 
