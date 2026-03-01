@@ -116,14 +116,14 @@ class StorageUnit(BaseStorageUnit):
     p_nom: float | None = Field(default=None, gt=0.0)
     """Nominal power for limits on `p` in optimisation."""
 
-    p_nom_extendable: Literal[False] = False  # type: ignore
+    p_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
 class ExtendableStorageUnit(BaseStorageUnit):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal power of the storage unit module. Introduces integer variables if set."""
 
-    p_nom_extendable: Literal[True] = True  # type: ignore
+    p_nom_extendable: Literal[True] = True  # pyright: ignore[reportIncompatibleVariableOverride]
 
     p_nom_min: float = Field(default=0.0, ge=0.0)
     """Minimum value of `p_nom_opt`."""

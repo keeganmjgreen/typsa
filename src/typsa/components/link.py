@@ -97,16 +97,16 @@ class Link(BaseLink):
     p_nom: float | None = Field(default=None, gt=0.0)
     """Limit of power which can pass through link (in units of `bus0`)."""
 
-    p_nom_extendable: Literal[False] = False  # type: ignore
+    p_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
-    committable: Literal[False] = False  # type: ignore
+    committable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
 class ExtendableLink(BaseLink):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Unit size of link module (e.g. fixed blocks of 100 MW)."""
 
-    p_nom_extendable: Literal[True] = True  # type: ignore
+    p_nom_extendable: Literal[True] = True  # pyright: ignore[reportIncompatibleVariableOverride]
 
     p_nom_min: float = Field(default=0.0, ge=0.0)
     """Minimum value of `p_nom_opt`."""
@@ -120,11 +120,11 @@ class ExtendableLink(BaseLink):
     capital_cost: float = Field(default=0.0, ge=0.0)
     """Fixed period costs of extending `p_nom` by 1 MW (unit of `bus0`), including periodized investment costs and periodic fixed O&M costs (e.g. annuitized investment costs). Any `length` factor must already be included here."""
 
-    committable: Literal[False] = False  # type: ignore
+    committable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
 class CommittableLink(Link):
-    committable: Literal[True] = True  # type: ignore
+    committable: Literal[True] = True  # pyright: ignore[reportIncompatibleVariableOverride]
 
     start_up_cost: float = Field(default=0.0, ge=0.0)
     """Cost to start up the link."""

@@ -90,14 +90,14 @@ class Line(BaseLine):
     s_nom: float = Field(default=0.0, ge=0.0)
     """Limit of apparent power which can pass through branch in either direction."""
 
-    s_nom_extendable: Literal[False] = False  # type: ignore
+    s_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
 class ExtendableLine(BaseLine):
     s_nom_mod: float = Field(default=0.0, ge=0.0)
     """Modular unit size of line expansion of `s_nom` (e.g. fixed rating of added circuit). Introduces integer variables."""
 
-    s_nom_extendable: Literal[True] = True  # type: ignore
+    s_nom_extendable: Literal[True] = True  # pyright: ignore[reportIncompatibleVariableOverride]
 
     s_nom_min: float = Field(default=0.0, ge=0.0)
     """Minimum value of `s_nom_opt`."""

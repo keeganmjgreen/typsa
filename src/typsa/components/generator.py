@@ -98,16 +98,16 @@ class Generator(BaseGenerator):
     p_nom: float | None = Field(default=None, gt=0.0)
     """Nominal power for limits  on `p` in optimization."""
 
-    p_nom_extendable: Literal[False] = False  # type: ignore
+    p_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
-    committable: Literal[False] = False  # type: ignore
+    committable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
 class ExtendableGenerator(BaseGenerator):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal power of the generator module (e.g. fixed unit size of a nuclear power plant). Introduces integer variables if set."""
 
-    p_nom_extendable: Literal[True] = True  # type: ignore
+    p_nom_extendable: Literal[True] = True  # pyright: ignore[reportIncompatibleVariableOverride]
 
     p_nom_min: float = Field(default=0.0, ge=0.0)
     """Minimum value of `p_nom_opt`."""
@@ -121,11 +121,11 @@ class ExtendableGenerator(BaseGenerator):
     capital_cost: float = Field(default=0.0, ge=0.0)
     """Fixed period costs of extending `p_nom` by 1 MW, including periodized investment costs and periodic fixed O&M costs (e.g. annuitized investment costs)."""
 
-    committable: Literal[False] = False  # type: ignore
+    committable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
 class CommittableGenerator(Generator):
-    committable: Literal[True] = True  # type: ignore
+    committable: Literal[True] = True  # pyright: ignore[reportIncompatibleVariableOverride]
 
     start_up_cost: float = Field(default=0.0, ge=0.0)
     """Cost to start up the generator."""

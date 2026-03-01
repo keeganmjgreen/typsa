@@ -92,14 +92,14 @@ class Store(BaseStore):
     e_nom: float = Field(default=0.0, ge=0.0)
     """Nominal energy capacity (i.e. limit on `e`)."""
 
-    e_nom_extendable: Literal[False] = False  # type: ignore
+    e_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
 
 
 class ExtendableStore(BaseStore):
     e_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal energy capacity of the store module. Introduces integer variables if set."""
 
-    e_nom_extendable: Literal[True] = True  # type: ignore
+    e_nom_extendable: Literal[True] = True  # pyright: ignore[reportIncompatibleVariableOverride]
 
     e_nom_min: float = Field(default=0.0, ge=0.0)
     """Minimum value of `e_nom_opt`."""
