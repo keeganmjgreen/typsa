@@ -52,7 +52,7 @@ class Network(PypsaNetworkDerivative):
         **kwargs: Any,
     ) -> NetworkOptimizationModel:
         """Create the network's optimization problem."""
-        pypsa_network_copy = deepcopy(self._pypsa_network)
+        pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.optimize.create_model(  # pyright: ignore[reportUnknownMemberType]
             snapshots=snapshots,
             multi_investment_periods=multi_investment_periods,
@@ -79,7 +79,7 @@ class NetworkOptimizationModel(PypsaNetworkDerivative):
         **kwargs: Any,
     ) -> OptimizedNetwork:
         """Solve the network's optimization problem."""
-        pypsa_network_copy = deepcopy(self._pypsa_network)
+        pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.optimize(
             extra_functionality=extra_functionality,
             assign_all_duals=assign_all_duals,
@@ -131,7 +131,7 @@ class NetworkSimulationAccessor(PypsaNetworkDerivative):
 
     def lpf(self) -> LinearPowerFlowDynamicResults:
         """Run linearized power flow on the optimized network."""
-        pypsa_network_copy = deepcopy(self._pypsa_network)
+        pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.lpf(  # pyright: ignore[reportUnknownMemberType]
             snapshots=self.snapshots,
             skip_pre=self.skip_pre,
@@ -146,7 +146,7 @@ class NetworkSimulationAccessor(PypsaNetworkDerivative):
         slack_weights: str = "p_set",
     ) -> NonlinearPowerFlowDynamicResults:
         """Run nonlinear power flow on the optimized network."""
-        pypsa_network_copy = deepcopy(self._pypsa_network)
+        pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.pf(  # pyright: ignore[reportUnknownMemberType]
             snapshots=self.snapshots,
             skip_pre=self.skip_pre,
