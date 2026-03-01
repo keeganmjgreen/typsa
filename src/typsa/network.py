@@ -174,8 +174,6 @@ class NetworkOptimizationModel[
             compute_infeasibilities=compute_infeasibilities,
             **kwargs,
         )
-        pypsa_network_copy.optimize.fix_optimal_capacities()
-        pypsa_network_copy.optimize.fix_optimal_dispatch()
         return OptimizedNetwork[T](pypsa_network_copy)
 
 
@@ -198,8 +196,11 @@ class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots](
         skip_pre: bool = False,
     ) -> NetworkSimulationAccessor:
         """Access simulation methods."""
+        pypsa_network_copy = self._copy_pypsa_network()
+        pypsa_network_copy.optimize.fix_optimal_capacities()
+        pypsa_network_copy.optimize.fix_optimal_dispatch()
         return NetworkSimulationAccessor(
-            self._pypsa_network, snapshots=snapshots, skip_pre=skip_pre
+            pypsa_network_copy, snapshots=snapshots, skip_pre=skip_pre
         )
 
 
