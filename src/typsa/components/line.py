@@ -14,6 +14,7 @@ from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
     BaseStaticResults,
+    SNomExtendableComponent,
 )
 
 
@@ -51,9 +52,6 @@ class BaseLine[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     """
 
     class_name: ClassVar = "Line"
-
-    name: str = Field(min_length=1)
-    """Unique name."""
 
     bus0: str = Field(min_length=1)
     """Name of origin bus to which branch is attached."""
@@ -97,7 +95,7 @@ class Line[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseLine[
 
 
 class ExtendableLine[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseLine[T]
+    BaseLine[T], SNomExtendableComponent[T]
 ):
     s_nom_mod: float = Field(default=0.0, ge=0.0)
     """Modular unit size of line expansion of `s_nom` (e.g. fixed rating of added circuit). Introduces integer variables."""
@@ -135,11 +133,6 @@ class LineOptimizationStaticResults(BaseStaticResults):
 
     r_pu_eff: float = 0.0
     """Effective per unit series resistance for linear power flow, calculated by `n.calculate_dependent_values()` from `r` and `n.buses.v_nom`."""
-
-
-class ExtendableLineOptimizationStaticResults(LineOptimizationStaticResults):
-    s_nom_opt: float = 0.0
-    """Optimised nominal capacity for apparent power."""
 
 
 class LineBaseDynamicResults(BaseDynamicResults):

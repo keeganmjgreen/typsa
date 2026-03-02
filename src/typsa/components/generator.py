@@ -13,7 +13,7 @@ from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnap
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseStaticResults,
+    PNomExtendableComponent,
 )
 
 
@@ -26,9 +26,6 @@ class BaseGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     """
 
     class_name: ClassVar = "Generator"
-
-    name: str = Field(min_length=1)
-    """Unique name."""
 
     bus: str = Field(min_length=1)
     """Name of bus to which generator is attached."""
@@ -109,7 +106,7 @@ class Generator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
 
 class ExtendableGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseGenerator[T]
+    BaseGenerator[T], PNomExtendableComponent[T]
 ):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal power of the generator module (e.g. fixed unit size of a nuclear power plant). Introduces integer variables if set."""
@@ -159,11 +156,6 @@ class CommittableGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = S
 
     ramp_limit_shut_down: float = Field(default=1.0, gt=0.0, le=1.0)
     """Maximum active power decrease at shut down, per unit of the nominal power."""
-
-
-class ExtendableGeneratorOptimizationStaticResults(BaseStaticResults):
-    p_nom_opt: float = 0.0
-    """Optimised nominal capacity."""
 
 
 class GeneratorBaseDynamicResults(BaseDynamicResults):

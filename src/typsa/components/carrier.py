@@ -19,9 +19,6 @@ class Carrier(BaseComponent[Static]):
 
     class_name: ClassVar = "Carrier"
 
-    name: str = Field(min_length=1)
-    """Unique name."""
-
     co2_emissions: float = Field(default=0.0, ge=0.0)
     """Emissions in tCO₂ per MWh of primary energy (e.g. methane has 0.2 tCO₂/MWh_thermal)."""
 

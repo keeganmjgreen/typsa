@@ -12,7 +12,7 @@ from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnap
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseStaticResults,
+    PNomExtendableComponent,
 )
 
 type _BusName = str
@@ -31,9 +31,6 @@ class BaseLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     """
 
     class_name: ClassVar = "Link"
-
-    name: str = Field(min_length=1)
-    """Unique name."""
 
     bus0: str = Field(min_length=1)
     """Name of origin bus to which link is attached."""
@@ -107,7 +104,7 @@ class Link[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseLink[
 
 
 class ExtendableLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseLink[T]
+    BaseLink[T], PNomExtendableComponent[T]
 ):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Unit size of link module (e.g. fixed blocks of 100 MW)."""
@@ -157,11 +154,6 @@ class CommittableLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static
 
     ramp_limit_shut_down: float = Field(default=1.0, gt=0.0, le=1.0)
     """Maximum decrease at shut down, per unit of `p_nom`."""
-
-
-class ExtendableLinkOptimizationStaticResults(BaseStaticResults):
-    p_nom_opt: float = 0.0
-    """Optimised nominal capacity."""
 
 
 class LinkBaseDynamicResults(BaseDynamicResults):

@@ -25,9 +25,6 @@ class ShuntImpedance(BaseComponent[Static]):
 
     class_name: ClassVar = "ShuntImpedance"
 
-    name: str = Field(min_length=1)
-    """Unique name."""
-
     bus: str = Field(min_length=1)
     """Name of bus to which shunt impedance is attached."""
 

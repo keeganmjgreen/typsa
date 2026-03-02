@@ -33,9 +33,6 @@ class Bus[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseCompon
 
     class_name: ClassVar = "Bus"
 
-    name: str = Field(min_length=1)
-    """Unique name."""
-
     v_nom: float | None = None
     """Nominal voltage."""
 

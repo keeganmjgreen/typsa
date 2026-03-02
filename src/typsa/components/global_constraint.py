@@ -27,9 +27,6 @@ class GlobalConstraint(BaseComponent[Static]):
 
     class_name: ClassVar = "GlobalConstraint"
 
-    name: str = Field(min_length=1)
-    """Unique name."""
-
     type: GlobalConstraintType = "primary_energy"
     """Type of constraint (e.g. "primary energy", "tech_capacity_expansion_limit", "operational_limit", "transmission_volume_expansion_limit", "transmission_expansion_cost_limit")."""
 

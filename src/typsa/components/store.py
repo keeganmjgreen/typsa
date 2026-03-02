@@ -13,7 +13,7 @@ from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnap
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseStaticResults,
+    ENomExtendableComponent,
 )
 
 
@@ -26,9 +26,6 @@ class BaseStore[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     """
 
     class_name: ClassVar = "Store"
-
-    name: str = Field(min_length=1)
-    """Unique name."""
 
     bus: str = Field(min_length=1)
     """Name of bus to which store is attached."""
@@ -99,7 +96,7 @@ class Store[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseStor
 
 
 class ExtendableStore[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseStore[T]
+    BaseStore[T], ENomExtendableComponent[T]
 ):
     e_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal energy capacity of the store module. Introduces integer variables if set."""
@@ -117,11 +114,6 @@ class ExtendableStore[T: Static | TimestampSnapshots | IntegerSnapshots = Static
 
     capital_cost: float = Field(default=0.0, ge=0.0)
     """Fixed period costs of extending `e_nom` by 1 MWh, including periodized investment costs and periodic fixed O&M costs (e.g. annuitized investment costs)."""
-
-
-class ExtendableStoreOptimizationStaticResults(BaseStaticResults):
-    e_nom_opt: float = 0.0
-    """Optimised nominal energy capacity outputted by optimisation."""
 
 
 class StoreBaseDynamicResults(BaseDynamicResults):

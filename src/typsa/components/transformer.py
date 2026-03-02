@@ -14,6 +14,7 @@ from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
     BaseStaticResults,
+    SNomExtendableComponent,
 )
 
 
@@ -61,9 +62,6 @@ class BaseTransformer[T: Static | TimestampSnapshots | IntegerSnapshots = Static
 
     class_name: ClassVar = "Transformer"
 
-    name: str = Field(min_length=1)
-    """Unique name."""
-
     bus0: str = Field(min_length=1)
     """Name of origin bus (typically higher voltage) to which transformer is attached."""
 
@@ -105,7 +103,7 @@ class Transformer[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
 
 class ExtendableTransformer[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseTransformer[T]
+    BaseTransformer[T], SNomExtendableComponent[T]
 ):
     s_nom_mod: float = Field(default=0.0, ge=0.0)
     """Modular unit size of transformer expansion of `s_nom`. Introduces integer variables."""
@@ -143,13 +141,6 @@ class TransformerOptimizationStaticResults(BaseStaticResults):
 
     r_pu_eff: float = 0.0
     """Effective per unit series resistance for linear power flow, calculated by `n.calculate_dependent_values()` from `x`, `tap_ratio` for transformers and `n.buses.v_nom`."""
-
-
-class ExtendableTransformerOptimizationStaticResults(
-    TransformerOptimizationStaticResults
-):
-    s_nom_opt: float = 0.0
-    """Optimised nominal capacity for apparent power."""
 
 
 class TransformerBaseDynamicResults(BaseDynamicResults):

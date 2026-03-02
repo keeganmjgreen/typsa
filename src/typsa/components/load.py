@@ -23,9 +23,6 @@ class Load[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
     class_name: ClassVar = "Load"
 
-    name: str = Field(min_length=1)
-    """Unique name."""
-
     bus: str = Field(min_length=1)
     """Name of bus to which load is attached."""
 

@@ -67,11 +67,11 @@ network.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
 
 optimized_network = network.model().optimize()
 
-optimized_network.static_results.all_buses
+optimized_network.static_results.of_all_buses
 # {'zone_1': BusOptimizationStaticResults(control='Slack', generator='gen_1', sub_network='0'),
 #  'zone_2': BusOptimizationStaticResults(control='PQ', generator='', sub_network='0')}
 
-optimized_network.dynamic_results.all_buses.marginal_price
+optimized_network.dynamic_results.of_all_buses.marginal_price
 # name        zone_1    zone_2
 # snapshot
 # now       19.00009  35.00011

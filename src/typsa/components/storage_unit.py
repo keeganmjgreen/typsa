@@ -13,7 +13,7 @@ from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnap
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseStaticResults,
+    PNomExtendableComponent,
 )
 
 
@@ -26,9 +26,6 @@ class BaseStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static
     """
 
     class_name: ClassVar = "StorageUnit"
-
-    name: str = Field(min_length=1)
-    """Unique name"""
 
     bus: str = Field(min_length=1)
     """Name of bus to which storage unit is attached."""
@@ -125,7 +122,7 @@ class StorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
 
 class ExtendableStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseStorageUnit[T]
+    BaseStorageUnit[T], PNomExtendableComponent[T]
 ):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal power of the storage unit module. Introduces integer variables if set."""
@@ -143,11 +140,6 @@ class ExtendableStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = 
 
     capital_cost: float = Field(default=0.0, ge=0.0)
     """Fixed period costs of extending `p_nom` by 1 MW, including periodized investment costs and periodic fixed O&M costs (e.g. annuitized investment costs)."""
-
-
-class ExtendableStorageUnitOptimizationStaticResults(BaseStaticResults):
-    p_nom_opt: float = 0.0
-    """Optimised nominal power."""
 
 
 class StorageUnitBaseDynamicResults(BaseDynamicResults):

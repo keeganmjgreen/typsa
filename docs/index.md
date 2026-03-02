@@ -184,7 +184,7 @@ optimized_network = network.model().optimize()
 Obtaining static results:
 
 ``` py
-optimized_network.static_results.all_buses
+optimized_network.static_results.of_all_buses
 ```
 
 ```py title="Output"
@@ -197,7 +197,7 @@ optimized_network.static_results.all_buses
 Obtaining dynamic results:
 
 ``` py
-optimized_network.dynamic_results.all_buses.marginal_price
+optimized_network.dynamic_results.of_all_buses.marginal_price
 ```
 
 ```title="Output DataFrame"
