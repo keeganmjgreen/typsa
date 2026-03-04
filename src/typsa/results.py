@@ -226,7 +226,9 @@ class _BaseDynamicResults(PypsaNetworkDerivative):
         if filter is not None:
             dynamic_dfs = {
                 field_name: dynamic_dfs[field_name][
-                    static_df.loc[filter(static_df)].index
+                    static_df.loc[filter(static_df)].index.intersection(
+                        dynamic_dfs[field_name].columns
+                    )
                 ]
                 for field_name in dynamic_results_class.model_fields
             }
