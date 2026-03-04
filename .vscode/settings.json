@@ -29,6 +29,7 @@
         "mathjax",
         "mkdocs",
         "mkdocstrings",
+        "mypy",
         "nbconvert",
         "optimisation",
         "Optimised",
