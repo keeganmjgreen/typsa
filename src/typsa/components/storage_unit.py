@@ -11,14 +11,13 @@ from typsa.literal_types import ControlType, SignType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
-    BaseComponent,
     BaseDynamicResults,
     PNomExtendableComponent,
 )
 
 
 class BaseStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseComponent[T]
+    PNomExtendableComponent[T]
 ):
     """Storage units enable inter-temporal energy shifting with fixed nominal-energy-to-nominal-power ratio.
 
@@ -122,7 +121,7 @@ class StorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
 
 class ExtendableStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseStorageUnit[T], PNomExtendableComponent[T]
+    BaseStorageUnit[T]
 ):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal power of the storage unit module. Introduces integer variables if set."""

@@ -11,14 +11,13 @@ from typsa.literal_types import SignType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
-    BaseComponent,
     BaseDynamicResults,
     ENomExtendableComponent,
 )
 
 
 class BaseStore[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseComponent[T]
+    ENomExtendableComponent[T]
 ):
     """Stores provide fundamental inter-temporal storage functionality not limited in charging or discharging power.
 
@@ -96,7 +95,7 @@ class Store[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseStor
 
 
 class ExtendableStore[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseStore[T], ENomExtendableComponent[T]
+    BaseStore[T]
 ):
     e_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal energy capacity of the store module. Introduces integer variables if set."""

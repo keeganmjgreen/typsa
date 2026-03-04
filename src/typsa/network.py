@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import math
 from collections.abc import Callable
 from typing import Any, Sequence, assert_never, cast
 
@@ -9,6 +10,21 @@ import pandas as pd
 import pypsa
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
+from typsa.components.bus import Bus, Coordinates
+from typsa.components.carrier import Carrier
+from typsa.components.generator import (
+    CommittableGenerator,
+    ExtendableGenerator,
+    Generator,
+)
+from typsa.components.global_constraint import GlobalConstraint
+from typsa.components.line import ExtendableLine, Line
+from typsa.components.link import CommittableLink, ExtendableLink, Link
+from typsa.components.load import Load
+from typsa.components.shunt_impedance import ShuntImpedance
+from typsa.components.storage_unit import ExtendableStorageUnit, StorageUnit
+from typsa.components.store import ExtendableStore, Store
+from typsa.components.transformer import ExtendableTransformer, Transformer
 from typsa.results import (
     LinearPowerFlowDynamicResults,
     NonlinearPowerFlowDynamicResults,
@@ -23,16 +39,205 @@ from typsa.time_variation import (
     TimestampSnapshots,
 )
 
-from .components._base_component import BaseComponent
+from .components._base_component import BaseComponent, BaseExtendableComponent
+
+
+class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
+    PypsaNetworkDerivative
+):
+    _snapshots_class: type[T]
+
+    def __init__(self, pypsa_network: pypsa.Network, snapshots_class: type[T]) -> None:
+        super().__init__(pypsa_network)
+        self._snapshots_class = snapshots_class
+
+    @property
+    def buses(self) -> dict[str, Bus[T]]:
+        """Get all `Bus` instances."""
+        return cast(dict[str, Bus[T]], self._get_components(Bus))
+
+    @property
+    def carriers(self) -> dict[str, Carrier]:
+        """Get all `Carrier` instances."""
+        return self._get_components(Carrier)
+
+    @property
+    def generators(
+        self,
+    ) -> dict[str, Generator[T] | ExtendableGenerator[T] | CommittableGenerator[T]]:
+        """Get all `Generator`, `ExtendableGenerator`, and `CommittableGenerator`
+        instances.
+        """
+        return {
+            **cast(
+                dict[str, Generator[T]],
+                self._get_components(Generator),
+            ),
+            **cast(
+                dict[str, ExtendableGenerator[T]],
+                self._get_components(ExtendableGenerator),
+            ),
+            **cast(
+                dict[str, CommittableGenerator[T]],
+                self._get_components(CommittableGenerator),
+            ),
+        }
+
+    @property
+    def global_constraints(self) -> dict[str, GlobalConstraint]:
+        """Get all `GlobalConstraint` instances."""
+        return self._get_components(GlobalConstraint)
+
+    @property
+    def lines(self) -> dict[str, Line[T] | ExtendableLine[T]]:
+        """Get all `Line` and `ExtendableLine` instances."""
+        return {
+            **cast(dict[str, Line[T]], self._get_components(Line)),
+            **cast(dict[str, ExtendableLine[T]], self._get_components(ExtendableLine)),
+        }
+
+    @property
+    def links(self) -> dict[str, Link[T] | ExtendableLink[T] | CommittableLink[T]]:
+        """Get all `Link`, `ExtendableLink`, and `CommittableLink` instances."""
+        return {
+            **cast(dict[str, Link[T]], self._get_components(Link)),
+            **cast(dict[str, ExtendableLink[T]], self._get_components(ExtendableLink)),
+            **cast(
+                dict[str, CommittableLink[T]], self._get_components(CommittableLink)
+            ),
+        }
+
+    @property
+    def loads(self) -> dict[str, Load]:
+        """Get all `Load` instances."""
+        return self._get_components(Load)
+
+    @property
+    def shunt_impedances(self) -> dict[str, ShuntImpedance]:
+        """Get all `ShuntImpedance` instances."""
+        return self._get_components(ShuntImpedance)
+
+    @property
+    def storage_units(self) -> dict[str, StorageUnit[T] | ExtendableStorageUnit[T]]:
+        """Get all `StorageUnit` and `ExtendableStorageUnit` instances."""
+        return {
+            **cast(
+                dict[str, StorageUnit[T]],
+                self._get_components(StorageUnit),
+            ),
+            **cast(
+                dict[str, ExtendableStorageUnit[T]],
+                self._get_components(ExtendableStorageUnit),
+            ),
+        }
+
+    @property
+    def stores(self) -> dict[str, Store[T] | ExtendableStore[T]]:
+        """Get all `Store` and `ExtendableStore` instances."""
+        return {
+            **cast(dict[str, Store[T]], self._get_components(Store)),
+            **cast(
+                dict[str, ExtendableStore[T]], self._get_components(ExtendableStore)
+            ),
+        }
+
+    @property
+    def transformers(self) -> dict[str, Transformer[T] | ExtendableTransformer[T]]:
+        """Get all `Transformer` and `ExtendableTransformer` instances."""
+        return {
+            **cast(
+                dict[str, Transformer[T]],
+                self._get_components(Transformer),
+            ),
+            **cast(
+                dict[str, ExtendableTransformer[T]],
+                self._get_components(ExtendableTransformer),
+            ),
+        }
+
+    def _get_components[T2: BaseComponent](
+        self, component_class: type[T2]
+    ) -> dict[str, T2]:
+        static_df = self._get_pypsa_network_components(component_class).static
+        if issubclass(component_class, BaseExtendableComponent):
+            field_name = f"{component_class.EXTENDABLE_COLUMN_PREFIX}_extendable"
+            static_df = cast(
+                pd.DataFrame,
+                static_df.loc[
+                    static_df[field_name]
+                    == component_class.model_fields[field_name].default
+                ],
+            )
+        committable = "committable"
+        if committable in static_df.columns:
+            static_df = cast(
+                pd.DataFrame,
+                static_df.loc[
+                    static_df[committable]
+                    == component_class.model_fields[committable].default
+                ],
+            )
+        component_dicts = {
+            cast(str, name): dict(row) for name, row in static_df.iterrows()
+        }
+        dynamic_dfs = cast(
+            dict[str, pd.DataFrame],
+            self._get_pypsa_network_components(component_class).dynamic,
+        )
+        if issubclass(self._snapshots_class, Static):
+            series_class = None
+        elif issubclass(self._snapshots_class, TimestampSnapshots):
+            series_class = TimestampedSeries
+        else:
+            assert issubclass(self._snapshots_class, IntegerSnapshots)
+            series_class = RangedSeries
+        for component_name in component_dicts.keys():
+            component_dicts[component_name] = {
+                k: (None if isinstance(v, str) and len(v) == 0 else v)
+                for k, v in component_dicts[component_name].items()
+                if not isinstance(v, float) or math.isfinite(v)
+            }
+            if (
+                issubclass(component_class, Bus)
+                and "x" in component_dicts[component_name]
+                and "y" in component_dicts[component_name]
+            ):
+                component_dicts[component_name]["coordinates"] = Coordinates(
+                    x=component_dicts[component_name].pop("x"),
+                    y=component_dicts[component_name].pop("y"),
+                )
+            if "parameters" in component_class.model_fields:
+                parameters_dict = {
+                    k: component_dicts[component_name].pop(k)
+                    for k in list(component_dicts[component_name].keys())
+                    if k not in component_class.model_fields
+                }
+                component_dicts[component_name]["parameters"] = parameters_dict
+            component_dicts[component_name]["name"] = component_name
+            if series_class is not None:
+                component_dicts[component_name].update(
+                    {
+                        field_name: series_class(dynamic_df[component_name])
+                        for field_name, dynamic_df in dynamic_dfs.items()
+                        if component_name in dynamic_df.columns
+                        and any(dynamic_df[component_name].notna())
+                    }
+                )
+        return {
+            component_name: component_class.model_validate(
+                component_dict, extra="ignore"
+            )
+            for component_name, component_dict in component_dicts.items()
+        }
 
 
 class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
-    PypsaNetworkDerivative
+    _ComponentsAccessible[T]
 ):
     def __init__(self, snapshots: T = Static()) -> None:
         """Create a `typsa.Network` with the given snapshots."""
 
-        super().__init__(pypsa.Network())
+        super().__init__(pypsa.Network(), self._snapshots_class)
 
         # Type annotation of `snapshots` argument of `pypsa.Network.set_snapshots`
         # is incorrect:
@@ -134,7 +339,7 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
         linearized_unit_commitment: bool = False,
         consistency_check: bool = True,
         **kwargs: Any,
-    ) -> NetworkOptimizationModel[T]:
+    ) -> NetworkOptimizationModel:
         """Create the network's optimization problem."""
         pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.optimize.create_model(  # pyright: ignore[reportUnknownMemberType]
@@ -145,12 +350,10 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
             consistency_check=consistency_check,
             **kwargs,
         )
-        return NetworkOptimizationModel[T](pypsa_network_copy)
+        return NetworkOptimizationModel(pypsa_network_copy)
 
 
-class NetworkOptimizationModel[
-    T: Static | TimestampSnapshots | IntegerSnapshots = Static
-](PypsaNetworkDerivative):
+class NetworkOptimizationModel(PypsaNetworkDerivative):
     @property
     def linopy_model(self) -> linopy.Model:
         return self._pypsa_network.model
@@ -163,7 +366,7 @@ class NetworkOptimizationModel[
         solver_options: dict[str, Any] | None = None,
         compute_infeasibilities: bool = False,
         **kwargs: Any,
-    ) -> OptimizedNetwork[T]:
+    ) -> OptimizedNetwork:
         """Solve the network's optimization problem."""
         pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.optimize(
@@ -174,12 +377,10 @@ class NetworkOptimizationModel[
             compute_infeasibilities=compute_infeasibilities,
             **kwargs,
         )
-        return OptimizedNetwork[T](pypsa_network_copy)
+        return OptimizedNetwork(pypsa_network_copy)
 
 
-class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots](
-    PypsaNetworkDerivative
-):
+class OptimizedNetwork(PypsaNetworkDerivative):
     @property
     def static_results(self) -> OptimizationStaticResults:
         """Access static optimization results."""

@@ -11,14 +11,13 @@ from typsa.literal_types import ControlType, SignType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
-    BaseComponent,
     BaseDynamicResults,
     PNomExtendableComponent,
 )
 
 
 class BaseGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseComponent[T]
+    PNomExtendableComponent[T]
 ):
     """Power generator for the bus carrier it attaches to.
 
@@ -106,7 +105,7 @@ class Generator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
 
 class ExtendableGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseGenerator[T], PNomExtendableComponent[T]
+    BaseGenerator[T]
 ):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Nominal power of the generator module (e.g. fixed unit size of a nuclear power plant). Introduces integer variables if set."""

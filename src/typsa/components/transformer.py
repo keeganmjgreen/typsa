@@ -11,7 +11,6 @@ from typsa.standard_types import StandardTransformerType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
-    BaseComponent,
     BaseDynamicResults,
     BaseStaticResults,
     SNomExtendableComponent,
@@ -53,7 +52,7 @@ class StandardTransformerParameters(BaseModel):
 
 
 class BaseTransformer[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseComponent[T]
+    SNomExtendableComponent[T]
 ):
     """2-winding transformer.
 
@@ -103,7 +102,7 @@ class Transformer[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
 
 class ExtendableTransformer[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseTransformer[T], SNomExtendableComponent[T]
+    BaseTransformer[T]
 ):
     s_nom_mod: float = Field(default=0.0, ge=0.0)
     """Modular unit size of transformer expansion of `s_nom`. Introduces integer variables."""

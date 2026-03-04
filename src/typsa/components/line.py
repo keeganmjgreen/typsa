@@ -11,7 +11,6 @@ from typsa.standard_types import StandardLineType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
-    BaseComponent,
     BaseDynamicResults,
     BaseStaticResults,
     SNomExtendableComponent,
@@ -44,7 +43,7 @@ class StandardLineParameters(BaseModel):
 
 
 class BaseLine[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseComponent[T]
+    SNomExtendableComponent[T]
 ):
     """Lines include distribution and transmission lines, overhead lines and cables.
 
@@ -95,7 +94,7 @@ class Line[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseLine[
 
 
 class ExtendableLine[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseLine[T], SNomExtendableComponent[T]
+    BaseLine[T]
 ):
     s_nom_mod: float = Field(default=0.0, ge=0.0)
     """Modular unit size of line expansion of `s_nom` (e.g. fixed rating of added circuit). Introduces integer variables."""

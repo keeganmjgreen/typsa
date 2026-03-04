@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import (
-    BaseComponent,
     BaseDynamicResults,
     PNomExtendableComponent,
 )
@@ -23,7 +22,7 @@ class BusConnection(BaseModel):
 
 
 class BaseLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseComponent[T]
+    PNomExtendableComponent[T]
 ):
     """Links are used for controllable directed flows between two or more buses with a flexible energy carriers (e.g. HVDC links, converters, conversions between carriers).
 
@@ -104,7 +103,7 @@ class Link[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseLink[
 
 
 class ExtendableLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseLink[T], PNomExtendableComponent[T]
+    BaseLink[T]
 ):
     p_nom_mod: float = Field(default=0.0, ge=0.0)
     """Unit size of link module (e.g. fixed blocks of 100 MW)."""

@@ -1,4 +1,8 @@
 import pypsa
+from pydantic.alias_generators import to_snake
+
+from typsa.components._base_component import BaseComponent
+from typsa.components._component_names import SINGULAR_TO_PLURAL_COMPONENT_NAMES
 
 
 class PypsaNetworkDerivative:
@@ -25,3 +29,14 @@ class PypsaNetworkDerivative:
             self._pypsa_network.model.solver_model = original_solver_model
 
         return copy
+
+    def _get_pypsa_network_components(
+        self, component_class: type[BaseComponent]
+    ) -> pypsa.Components:
+        with pypsa.option_context("api.new_components_api", True):
+            return getattr(
+                self._pypsa_network,
+                SINGULAR_TO_PLURAL_COMPONENT_NAMES[
+                    to_snake(component_class.class_name)
+                ],
+            )

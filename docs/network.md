@@ -6,7 +6,7 @@ Like PyPSA, TyPSA provides a `Network` object.
 
 ::: network
     options:
-      inherited_members: false
+      inherited_members: true
       members_order: source
       separate_signature: true
       show_bases: false
