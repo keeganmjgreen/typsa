@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Zensical serve",
+            "type": "shell",
+            "command": "uv run zensical serve",
+            "problemMatcher": []
+        },
+        {
+            "label": "Convert example notebooks to markdown",
+            "type": "shell",
+            "command": "source docs/examples/convert_to_md.sh",
+            "problemMatcher": []
+        }
+    ]
+}

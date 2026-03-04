@@ -1,10 +1,10 @@
 {
     "[markdown]": {
-        "editor.formatOnSave": false,
         "editor.codeActionsOnSave": {
             "source.fixAll": "never",
             "source.organizeImports": "never"
         },
+        "editor.formatOnSave": false
     },
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff"
@@ -17,8 +17,10 @@
         "Docstrings",
         "elec",
         "electrolyser",
+        "Eswatini",
         "HVDC",
         "infeasibilities",
+        "ipynb",
         "javascripts",
         "katex",
         "Keegan",
@@ -55,6 +57,7 @@
         ".ruff_cache/": true
     },
     "files.trimTrailingWhitespace": true,
+    "jupyter.notebookFileRoot": "${workspaceFolder}/src/",
     "python.analysis.autoImportCompletions": true,
     "python.analysis.typeCheckingMode": "strict",
     "python.testing.pytestArgs": [
