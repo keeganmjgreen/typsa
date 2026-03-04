@@ -35,7 +35,7 @@ class BaseGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     p_nom_extendable: bool
     """Switch to allow capacity `p_nom` to be extended in optimization."""
 
-    p_min_pu: float | Series[T] = Field(default=0.0, ge=0.0, le=1.0)
+    p_min_pu: float | Series[T] = Field(default=0.0, ge=-1.0, le=1.0)
     """The minimum output for each snapshot per unit of `p_nom` for the optimization (e.g. a minimal dispatch level for conventional power plants). Note that if `committable=False` and `p_min_pu>0`, this represents a must-run condition."""
 
     p_max_pu: float | Series[T] = Field(default=1.0, ge=0.0, le=1.0)
