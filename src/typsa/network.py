@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import datetime as dt
 import math
 from collections.abc import Callable
@@ -369,7 +370,7 @@ class NetworkOptimizationModel(PypsaNetworkDerivative):
     ) -> OptimizedNetwork:
         """Solve the network's optimization problem."""
         pypsa_network_copy = self._copy_pypsa_network()
-        pypsa_network_copy.optimize(
+        status, termination_condition = pypsa_network_copy.optimize(
             extra_functionality=extra_functionality,
             assign_all_duals=assign_all_duals,
             solver_name=solver_name,
@@ -377,7 +378,15 @@ class NetworkOptimizationModel(PypsaNetworkDerivative):
             compute_infeasibilities=compute_infeasibilities,
             **kwargs,
         )
+        if status != "ok" or termination_condition != "optimal":
+            raise OptimizationError(status, termination_condition)
         return OptimizedNetwork(pypsa_network_copy)
+
+
+@dataclasses.dataclass
+class OptimizationError(Exception):
+    status: str
+    termination_condition: str
 
 
 class OptimizedNetwork(PypsaNetworkDerivative):
