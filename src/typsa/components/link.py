@@ -148,11 +148,11 @@ class CommittableLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static
     down_time_before: int = 0
     """Number of snapshots that the link was offline before network.snapshots start. Only used if `min_down_time>0`. Does not consider snapshot weightings."""
 
-    ramp_limit_start_up: float = Field(default=1.0, gt=0.0, le=1.0)
-    """Maximum increase at start up, per unit of `p_nom`."""
+    ramp_limit_start_up: float | None = Field(default=None, gt=0.0, le=1.0)
+    """Maximum increase at start up, per unit of `p_nom`. Ignored if None."""
 
-    ramp_limit_shut_down: float = Field(default=1.0, gt=0.0, le=1.0)
-    """Maximum decrease at shut down, per unit of `p_nom`."""
+    ramp_limit_shut_down: float | None = Field(default=None, gt=0.0, le=1.0)
+    """Maximum decrease at shut down, per unit of `p_nom`. Ignored if None."""
 
 
 class LinkBaseDynamicResults(BaseDynamicResults):
