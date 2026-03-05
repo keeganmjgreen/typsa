@@ -70,9 +70,6 @@ class BaseLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     marginal_cost_quadratic: float | Series[T] = Field(default=0.0, ge=0.0)
     """Quadratic marginal cost for 1 MWh of consumption from `bus0`."""
 
-    stand_by_cost: float | Series[T] = Field(default=0.0, ge=0.0)
-    """Stand-by cost for operating the link. This cost is incurred whenever the status is 1 (including when dispatch decision is zero)."""
-
     length: float = Field(default=0.0, ge=0.0)
     """Length of the link. Useful for calculating `capital_cost` for HVDC connections."""
 
@@ -135,6 +132,9 @@ class CommittableLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static
 
     shut_down_cost: float = Field(default=0.0, ge=0.0)
     """Cost to shut down the link."""
+
+    stand_by_cost: float | Series[T] = Field(default=0.0, ge=0.0)
+    """Stand-by cost for operating the link. This cost is incurred whenever the status is 1 (including when dispatch decision is zero)."""
 
     min_up_time: int = Field(default=0, ge=0)
     """Minimum number of snapshots for status to be 1. Does not consider snapshot weightings."""

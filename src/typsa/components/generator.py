@@ -80,9 +80,6 @@ class BaseGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     committable: bool
     """Apply unit commitment constraints. This is only possible with `p_nom_extendable=False`."""
 
-    stand_by_cost: float | Series[T] = Field(default=0.0, ge=0.0)
-    """Stand-by cost for running the generator. This cost is incurred whenever the status is 1 (including when the dispatch decision is zero)."""
-
     ramp_limit_up: float | Series[T] | None = Field(default=None, gt=0.0, le=1.0)
     """Maximum active power increase from one snapshot to the next, per unit of the nominal power. Does not consider snapshot weightings."""
 
@@ -137,6 +134,9 @@ class CommittableGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = S
 
     shut_down_cost: float = Field(default=0.0, ge=0.0)
     """Cost to shut down the generator."""
+
+    stand_by_cost: float | Series[T] = Field(default=0.0, ge=0.0)
+    """Stand-by cost for running the generator. This cost is incurred whenever the status is 1 (including when the dispatch decision is zero)."""
 
     min_up_time: int = Field(default=0, ge=0)
     """Minimum number of snapshots for status to be 1. Does not consider snapshot weightings."""
