@@ -150,11 +150,11 @@ class CommittableGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = S
     down_time_before: int = 0
     """Number of snapshots that the generator was offline before `n.snapshots` start. Only used if `min_down_time>0`. Does not consider snapshot weightings."""
 
-    ramp_limit_start_up: float = Field(default=1.0, gt=0.0, le=1.0)
-    """Maximum active power increase at start up, per unit of the nominal power."""
+    ramp_limit_start_up: float | None = Field(default=None, gt=0.0, le=1.0)
+    """Maximum active power increase at start up, per unit of the nominal power. Ignored if None."""
 
-    ramp_limit_shut_down: float = Field(default=1.0, gt=0.0, le=1.0)
-    """Maximum active power decrease at shut down, per unit of the nominal power."""
+    ramp_limit_shut_down: float | None = Field(default=None, gt=0.0, le=1.0)
+    """Maximum active power decrease at shut down, per unit of the nominal power. Ignored if None."""
 
 
 class GeneratorBaseDynamicResults(BaseDynamicResults):
