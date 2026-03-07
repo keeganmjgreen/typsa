@@ -8,6 +8,7 @@ from typing import Any, Sequence, assert_never, cast
 
 import linopy
 import pandas as pd
+import pydantic
 import pypsa
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
@@ -354,6 +355,11 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
         return NetworkOptimizationModel(pypsa_network_copy)
 
 
+class RollingHorizon(pydantic.BaseModel):
+    horizon: int = pydantic.Field(gt=0)
+    overlap: int = pydantic.Field(default=0, ge=0)
+
+
 class NetworkOptimizationModel(PypsaNetworkDerivative):
     @property
     def linopy_model(self) -> linopy.Model:
@@ -366,20 +372,33 @@ class NetworkOptimizationModel(PypsaNetworkDerivative):
         solver_name: str | None = None,
         solver_options: dict[str, Any] | None = None,
         compute_infeasibilities: bool = False,
+        rolling_horizon: RollingHorizon | None = None,
         **kwargs: Any,
     ) -> OptimizedNetwork:
         """Solve the network's optimization problem."""
         pypsa_network_copy = self._copy_pypsa_network()
-        status, termination_condition = pypsa_network_copy.optimize(
-            extra_functionality=extra_functionality,
-            assign_all_duals=assign_all_duals,
-            solver_name=solver_name,
-            solver_options=solver_options,
-            compute_infeasibilities=compute_infeasibilities,
-            **kwargs,
-        )
-        if status != "ok" or termination_condition != "optimal":
-            raise OptimizationError(status, termination_condition)
+        if not rolling_horizon:
+            status, termination_condition = pypsa_network_copy.optimize(
+                extra_functionality=extra_functionality,
+                assign_all_duals=assign_all_duals,
+                solver_name=solver_name,
+                solver_options=solver_options,
+                compute_infeasibilities=compute_infeasibilities,
+                **kwargs,
+            )
+            if status != "ok" or termination_condition != "optimal":
+                raise OptimizationError(status, termination_condition)
+        else:
+            pypsa_network_copy.optimize.optimize_with_rolling_horizon(  # pyright: ignore[reportUnknownMemberType]
+                horizon=rolling_horizon.horizon,
+                overlap=rolling_horizon.overlap,
+                extra_functionality=extra_functionality,
+                assign_all_duals=assign_all_duals,
+                solver_name=solver_name,
+                solver_options=solver_options,
+                compute_infeasibilities=compute_infeasibilities,
+                **kwargs,
+            )
         return OptimizedNetwork(pypsa_network_copy)
 
 
