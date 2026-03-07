@@ -125,7 +125,7 @@ def report_results(
 
 
 ```python
-optimized_sa_network = create_network(countries=["South Africa"]).optimize()
+optimized_sa_network, _ = create_network(countries=["South Africa"]).optimize()
 ```
 
 
@@ -153,7 +153,7 @@ report_results(optimized_sa_network)
 
 
 ```python
-optimized_three_country_network = create_network(
+optimized_three_country_network, _ = create_network(
     countries=["South Africa", "Mozambique", "Eswatini"]
 ).optimize()
 ```
@@ -207,7 +207,7 @@ sa_network.add_components(
         marginal_cost=70,
     )
 )
-optimized_sa_network = sa_network.optimize()
+optimized_sa_network, _ = sa_network.optimize()
 ```
 
 
@@ -261,7 +261,7 @@ sa_network.add_components(
     )
 )
 
-optimized_sa_network = sa_network.optimize()
+optimized_sa_network, _ = sa_network.optimize()
 ```
 
 
@@ -297,7 +297,7 @@ sa_network.add_components(
         max_hours=6,
     )
 )
-optimized_sa_network = sa_network.optimize()
+optimized_sa_network, _ = sa_network.optimize()
 ```
 
 

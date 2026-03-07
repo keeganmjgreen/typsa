@@ -63,7 +63,7 @@ network.add_components(
 
 
 ```python
-optimized_network = network.optimize()
+optimized_network, _ = network.optimize()
 ```
 
 

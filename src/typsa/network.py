@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import dataclasses
 import datetime as dt
 import math
 from collections.abc import Callable
 from typing import Any, Sequence, assert_never, cast
 
 import pandas as pd
-import pydantic
 import pypsa
+from linopy.constants import SolverStatus, Status, TerminationCondition
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
 from typsa.components.bus import Bus, Coordinates
@@ -343,53 +342,72 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
         solver_name: str | None = None,
         solver_options: dict[str, Any] | None = None,
         compute_infeasibilities: bool = False,
-        rolling_horizon: RollingHorizon | None = None,
+        **kwargs: Any,
+    ) -> tuple[OptimizedNetwork, Status]:
+        """Optimize the network (model and solve its optimization problem).
+
+        Returns:
+            Optimized network and solver status.
+        """
+
+        pypsa_network_copy = self._copy_pypsa_network()
+        solver_status, termination_condition = pypsa_network_copy.optimize(
+            snapshots=snapshots,
+            multi_investment_periods=multi_investment_periods,
+            transmission_losses=transmission_losses,
+            linearized_unit_commitment=linearized_unit_commitment,
+            extra_functionality=extra_functionality,
+            assign_all_duals=assign_all_duals,
+            solver_name=solver_name,
+            solver_options=solver_options,
+            compute_infeasibilities=compute_infeasibilities,
+            **kwargs,
+        )
+        status = Status(
+            status=SolverStatus(solver_status),
+            termination_condition=TerminationCondition(termination_condition),
+        )
+        return OptimizedNetwork(pypsa_network_copy), status
+
+    def optimize_with_rolling_horizon(
+        self,
+        horizon: int,
+        overlap: int = 0,
+        snapshots: Sequence[Any] | None = None,
+        multi_investment_periods: bool = False,
+        transmission_losses: int = 0,
+        linearized_unit_commitment: bool = False,
+        extra_functionality: Callable[[pypsa.Network, pd.Index], None] | None = None,
+        assign_all_duals: bool = False,
+        solver_name: str | None = None,
+        solver_options: dict[str, Any] | None = None,
+        compute_infeasibilities: bool = False,
         **kwargs: Any,
     ) -> OptimizedNetwork:
-        """Model and solve the network's optimization problem."""
+        """Optimize the network in a rolling horizon fashion.
+
+        Solver status is not returned but logged for each horizon.
+
+        Returns:
+            Optimized network.
+        """
+
         pypsa_network_copy = self._copy_pypsa_network()
-        if not rolling_horizon:
-            status, termination_condition = pypsa_network_copy.optimize(
-                snapshots=snapshots,
-                multi_investment_periods=multi_investment_periods,
-                transmission_losses=transmission_losses,
-                linearized_unit_commitment=linearized_unit_commitment,
-                extra_functionality=extra_functionality,
-                assign_all_duals=assign_all_duals,
-                solver_name=solver_name,
-                solver_options=solver_options,
-                compute_infeasibilities=compute_infeasibilities,
-                **kwargs,
-            )
-            if status != "ok" or termination_condition != "optimal":
-                raise OptimizationError(status, termination_condition)
-        else:
-            pypsa_network_copy.optimize.optimize_with_rolling_horizon(  # pyright: ignore[reportUnknownMemberType]
-                snapshots=snapshots,
-                multi_investment_periods=multi_investment_periods,
-                transmission_losses=transmission_losses,
-                linearized_unit_commitment=linearized_unit_commitment,
-                horizon=rolling_horizon.horizon,
-                overlap=rolling_horizon.overlap,
-                extra_functionality=extra_functionality,
-                assign_all_duals=assign_all_duals,
-                solver_name=solver_name,
-                solver_options=solver_options,
-                compute_infeasibilities=compute_infeasibilities,
-                **kwargs,
-            )
+        pypsa_network_copy.optimize.optimize_with_rolling_horizon(  # pyright: ignore[reportUnknownMemberType]
+            snapshots=snapshots,
+            multi_investment_periods=multi_investment_periods,
+            transmission_losses=transmission_losses,
+            linearized_unit_commitment=linearized_unit_commitment,
+            horizon=horizon,
+            overlap=overlap,
+            extra_functionality=extra_functionality,
+            assign_all_duals=assign_all_duals,
+            solver_name=solver_name,
+            solver_options=solver_options,
+            compute_infeasibilities=compute_infeasibilities,
+            **kwargs,
+        )
         return OptimizedNetwork(pypsa_network_copy)
-
-
-class RollingHorizon(pydantic.BaseModel):
-    horizon: int = pydantic.Field(gt=0)
-    overlap: int = pydantic.Field(default=0, ge=0)
-
-
-@dataclasses.dataclass
-class OptimizationError(Exception):
-    status: str
-    termination_condition: str
 
 
 class OptimizedNetwork(PypsaNetworkDerivative):
