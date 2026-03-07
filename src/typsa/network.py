@@ -6,7 +6,6 @@ import math
 from collections.abc import Callable
 from typing import Any, Sequence, assert_never, cast
 
-import linopy
 import pandas as pd
 import pydantic
 import pypsa
@@ -333,40 +332,12 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
         }
         self._pypsa_network.add(**kwargs)
 
-    def model(
+    def optimize(
         self,
         snapshots: Sequence[Any] | None = None,
         multi_investment_periods: bool = False,
         transmission_losses: int = 0,
         linearized_unit_commitment: bool = False,
-        consistency_check: bool = True,
-        **kwargs: Any,
-    ) -> NetworkOptimizationModel:
-        """Create the network's optimization problem."""
-        pypsa_network_copy = self._copy_pypsa_network()
-        pypsa_network_copy.optimize.create_model(  # pyright: ignore[reportUnknownMemberType]
-            snapshots=snapshots,
-            multi_investment_periods=multi_investment_periods,
-            transmission_losses=transmission_losses,
-            linearized_unit_commitment=linearized_unit_commitment,
-            consistency_check=consistency_check,
-            **kwargs,
-        )
-        return NetworkOptimizationModel(pypsa_network_copy)
-
-
-class RollingHorizon(pydantic.BaseModel):
-    horizon: int = pydantic.Field(gt=0)
-    overlap: int = pydantic.Field(default=0, ge=0)
-
-
-class NetworkOptimizationModel(PypsaNetworkDerivative):
-    @property
-    def linopy_model(self) -> linopy.Model:
-        return self._pypsa_network.model
-
-    def optimize(
-        self,
         extra_functionality: Callable[[pypsa.Network, pd.Index], None] | None = None,
         assign_all_duals: bool = False,
         solver_name: str | None = None,
@@ -375,10 +346,14 @@ class NetworkOptimizationModel(PypsaNetworkDerivative):
         rolling_horizon: RollingHorizon | None = None,
         **kwargs: Any,
     ) -> OptimizedNetwork:
-        """Solve the network's optimization problem."""
+        """Model and solve the network's optimization problem."""
         pypsa_network_copy = self._copy_pypsa_network()
         if not rolling_horizon:
             status, termination_condition = pypsa_network_copy.optimize(
+                snapshots=snapshots,
+                multi_investment_periods=multi_investment_periods,
+                transmission_losses=transmission_losses,
+                linearized_unit_commitment=linearized_unit_commitment,
                 extra_functionality=extra_functionality,
                 assign_all_duals=assign_all_duals,
                 solver_name=solver_name,
@@ -390,6 +365,10 @@ class NetworkOptimizationModel(PypsaNetworkDerivative):
                 raise OptimizationError(status, termination_condition)
         else:
             pypsa_network_copy.optimize.optimize_with_rolling_horizon(  # pyright: ignore[reportUnknownMemberType]
+                snapshots=snapshots,
+                multi_investment_periods=multi_investment_periods,
+                transmission_losses=transmission_losses,
+                linearized_unit_commitment=linearized_unit_commitment,
                 horizon=rolling_horizon.horizon,
                 overlap=rolling_horizon.overlap,
                 extra_functionality=extra_functionality,
@@ -400,6 +379,11 @@ class NetworkOptimizationModel(PypsaNetworkDerivative):
                 **kwargs,
             )
         return OptimizedNetwork(pypsa_network_copy)
+
+
+class RollingHorizon(pydantic.BaseModel):
+    horizon: int = pydantic.Field(gt=0)
+    overlap: int = pydantic.Field(default=0, ge=0)
 
 
 @dataclasses.dataclass

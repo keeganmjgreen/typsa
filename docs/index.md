@@ -178,7 +178,7 @@ network.add_components(zone_1, zone_2, load_1, load_2, gen_1, gen_2, line)
 Optimizing a network:
 
 ```py
-optimized_network = network.model().optimize()
+optimized_network = network.optimize()
 ```
 
 Obtaining static results:
