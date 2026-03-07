@@ -295,7 +295,7 @@ def _process_component(
         members.append(static_results_class_name)
     if len(dynamic_results_json_schema.properties) > 0:
         members.append(dynamic_results_class_name)
-    Path("docs", "components", f"{name}.md").write_text(
+    Path("docs", "reference", "components", f"{name}.md").write_text(
         f"""::: components.{name}
     options:
       inherited_members: false
