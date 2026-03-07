@@ -8,6 +8,9 @@
 
 [project]
 
+# repo_url = "https://github.com/keeganmjgreen/typsa" # Uncomment for GH badge.
+# repo_name = "typsa" # Uncomment for GH badge.
+
 # The site_name is shown in the page header and the browser window title
 #
 # Read more: https://zensical.org/docs/setup/basics/#site_name
@@ -131,7 +134,7 @@ features = [
     # will generate an edit button for the page. This works for common
     # repository hosting services.
     # https://zensical.org/docs/setup/repository/#content-actions
-    #"content.action.edit",
+    #"content.action.edit", # Uncomment for GH badge.
 
     # If you have a repository configured and turn on this feature, Zensical
     # will generate a button that allows the user to view the Markdown
@@ -304,14 +307,14 @@ toggle.name = "Switch to light mode"
 # ----------------------------------------------------------------------------
 #[project.theme.icon]
 #logo = "lucide/smile"
-#repo = "lucide/smile"
+#repo = "fontawesome/brands/github" # Uncomment for GH badge.
 
 # ----------------------------------------------------------------------------
 # The "extra" section contains miscellaneous settings.
 # ----------------------------------------------------------------------------
-#[[project.extra.social]]
-#icon = "fontawesome/brands/github"
-#link = "https://github.com/user/repo"
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/keeganmjgreen/typsa"
 
 [project.markdown_extensions.attr_list]
 [project.markdown_extensions.md_in_html]
