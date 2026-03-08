@@ -333,7 +333,7 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
 
     def optimize(
         self,
-        snapshots: Sequence[Any] | None = None,
+        snapshots: T | None = None,
         multi_investment_periods: bool = False,
         transmission_losses: int = 0,
         linearized_unit_commitment: bool = False,
@@ -352,7 +352,11 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
 
         pypsa_network_copy = self._copy_pypsa_network()
         solver_status, termination_condition = pypsa_network_copy.optimize(
-            snapshots=snapshots,
+            snapshots=(
+                snapshots.to_index()  # pyright: ignore[reportArgumentType]
+                if snapshots is not None
+                else None
+            ),
             multi_investment_periods=multi_investment_periods,
             transmission_losses=transmission_losses,
             linearized_unit_commitment=linearized_unit_commitment,
@@ -373,7 +377,7 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
         self,
         horizon: int,
         overlap: int = 0,
-        snapshots: Sequence[Any] | None = None,
+        snapshots: T | None = None,
         multi_investment_periods: bool = False,
         transmission_losses: int = 0,
         linearized_unit_commitment: bool = False,
@@ -394,7 +398,11 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
 
         pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.optimize.optimize_with_rolling_horizon(  # pyright: ignore[reportUnknownMemberType]
-            snapshots=snapshots,
+            snapshots=(
+                snapshots.to_index()  # pyright: ignore[reportArgumentType]
+                if snapshots is not None
+                else None
+            ),
             multi_investment_periods=multi_investment_periods,
             transmission_losses=transmission_losses,
             linearized_unit_commitment=linearized_unit_commitment,
@@ -424,16 +432,20 @@ class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots](
         return OptimizationDynamicResults(self._pypsa_network)
 
     def simulation(
-        self,
-        snapshots: Sequence[Any] | None = None,
-        skip_pre: bool = False,
+        self, snapshots: T | None = None, skip_pre: bool = False
     ) -> NetworkSimulationAccessor:
         """Access simulation methods."""
         pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.optimize.fix_optimal_capacities()
         pypsa_network_copy.optimize.fix_optimal_dispatch()
         return NetworkSimulationAccessor(
-            pypsa_network_copy, snapshots=snapshots, skip_pre=skip_pre
+            pypsa_network_copy,
+            snapshots=(
+                snapshots.to_index()  # pyright: ignore[reportArgumentType]
+                if snapshots is not None
+                else None
+            ),
+            skip_pre=skip_pre,
         )
 
 
