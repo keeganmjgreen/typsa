@@ -343,7 +343,7 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
         solver_options: dict[str, Any] | None = None,
         compute_infeasibilities: bool = False,
         **kwargs: Any,
-    ) -> tuple[OptimizedNetwork, Status]:
+    ) -> tuple[OptimizedNetwork[T], Status]:
         """Optimize the network (model and solve its optimization problem).
 
         Returns:
@@ -367,7 +367,7 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
             status=SolverStatus(solver_status),
             termination_condition=TerminationCondition(termination_condition),
         )
-        return OptimizedNetwork(pypsa_network_copy), status
+        return OptimizedNetwork(pypsa_network_copy, self._snapshots_class), status
 
     def optimize_with_rolling_horizon(
         self,
@@ -383,7 +383,7 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
         solver_options: dict[str, Any] | None = None,
         compute_infeasibilities: bool = False,
         **kwargs: Any,
-    ) -> OptimizedNetwork:
+    ) -> OptimizedNetwork[T]:
         """Optimize the network in a rolling horizon fashion.
 
         Solver status is not returned but logged for each horizon.
@@ -407,10 +407,12 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
             compute_infeasibilities=compute_infeasibilities,
             **kwargs,
         )
-        return OptimizedNetwork(pypsa_network_copy)
+        return OptimizedNetwork(pypsa_network_copy, self._snapshots_class)
 
 
-class OptimizedNetwork(PypsaNetworkDerivative):
+class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots](
+    _ComponentsAccessible[T]
+):
     @property
     def static_results(self) -> OptimizationStaticResults:
         """Access static optimization results."""
