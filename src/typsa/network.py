@@ -6,11 +6,12 @@ from collections.abc import Callable
 from typing import Any, Sequence, assert_never, cast
 
 import pandas as pd
+import pydantic
 import pypsa
 from linopy.constants import SolverStatus, Status, TerminationCondition
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
-from typsa.components.bus import Bus, Coordinates
+from typsa.components.bus import Bus, BusControl, Coordinates, SlackBusControl
 from typsa.components.carrier import Carrier
 from typsa.components.generator import (
     CommittableGenerator,
@@ -24,6 +25,7 @@ from typsa.components.load import Load
 from typsa.components.shunt_impedance import ShuntImpedance
 from typsa.components.storage_unit import ExtendableStorageUnit, StorageUnit
 from typsa.components.store import ExtendableStore, Store
+from typsa.components.sub_network import SubNetwork
 from typsa.components.transformer import ExtendableTransformer, Transformer
 from typsa.results import (
     LinearPowerFlowDynamicResults,
@@ -42,11 +44,13 @@ from typsa.time_variation import (
 from .components._base_component import BaseComponent, BaseExtendableComponent
 
 
-class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
-    PypsaNetworkDerivative
-):
+class _HasSnapshotsClass[T: Static | TimestampSnapshots | IntegerSnapshots]:
     _snapshots_class: type[T]
 
+
+class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
+    PypsaNetworkDerivative, _HasSnapshotsClass[T]
+):
     def __init__(self, pypsa_network: pypsa.Network, snapshots_class: type[T]) -> None:
         super().__init__(pypsa_network)
         self._snapshots_class = snapshots_class
@@ -231,6 +235,170 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
         }
 
 
+class _SubNetworksAccessible(PypsaNetworkDerivative):
+    @property
+    def sub_networks(self) -> list[SubNetwork]:
+        static_df = self._get_pypsa_network_components(SubNetwork).static
+        return [
+            SubNetwork.model_validate(dict(row), extra="ignore")
+            for _, row in static_df.reset_index().iterrows()
+        ]
+
+    @property
+    def control_by_bus(self) -> dict[str, BusControl | SlackBusControl]:
+        static_df = self._get_pypsa_network_components(Bus).static
+        bus_control_type_adapter = pydantic.TypeAdapter[BusControl | SlackBusControl](
+            SlackBusControl | BusControl
+        )
+        return {
+            cast(str, component_name): bus_control_type_adapter.validate_python(
+                row["sub_network"]
+            )
+            for component_name, row in static_df.iterrows()
+        }
+
+    @property
+    def sub_network_by_bus(self) -> dict[str, str]:
+        return self._get_sub_network_by_component(Bus)
+
+    @property
+    def sub_network_by_line(self) -> dict[str, str]:
+        return self._get_sub_network_by_component(Line)
+
+    @property
+    def sub_network_by_transformer(self) -> dict[str, str]:
+        return self._get_sub_network_by_component(Transformer)
+
+    @property
+    def buses_by_sub_network(self) -> dict[str, list[str]]:
+        return self._get_components_by_sub_network(self.sub_network_by_bus)
+
+    @property
+    def lines_by_sub_network(self) -> dict[str, list[str]]:
+        return self._get_components_by_sub_network(self.sub_network_by_line)
+
+    @property
+    def transformers_by_sub_network(self) -> dict[str, list[str]]:
+        return self._get_components_by_sub_network(self.sub_network_by_transformer)
+
+    @property
+    def branches_by_sub_network(self) -> dict[str, list[str]]:
+        return self._get_components_by_sub_network(
+            {**self.sub_network_by_line, **self.sub_network_by_transformer}
+        )
+
+    def _get_sub_network_by_component(
+        self, component_class: type[Bus | Line | Transformer]
+    ) -> dict[str, str]:
+        static_df = self._get_pypsa_network_components(component_class).static
+        return {
+            cast(str, component_name): cast(str, row["sub_network"])
+            for component_name, row in static_df.iterrows()
+        }
+
+    def _get_components_by_sub_network(
+        self, sub_network_by_component: dict[str, str]
+    ) -> dict[str, list[str]]:
+        components_by_sub_network: dict[str, list[str]] = {}
+        for bus, sub_network in sub_network_by_component.items():
+            components_by_sub_network.setdefault(sub_network, []).append(bus)
+        return components_by_sub_network
+
+
+class _Optimizable[T: Static | TimestampSnapshots | IntegerSnapshots](
+    PypsaNetworkDerivative, _HasSnapshotsClass[T]
+):
+    def optimize(
+        self,
+        snapshots: T | None = None,
+        multi_investment_periods: bool = False,
+        transmission_losses: int = 0,
+        linearized_unit_commitment: bool = False,
+        extra_functionality: Callable[[pypsa.Network, pd.Index], None] | None = None,
+        assign_all_duals: bool = False,
+        solver_name: str | None = None,
+        solver_options: dict[str, Any] | None = None,
+        compute_infeasibilities: bool = False,
+        **kwargs: Any,
+    ) -> tuple[OptimizedNetwork[T], Status, float | None, float]:
+        """Optimize the network (model and solve its optimization problem).
+
+        Returns:
+            Optimized network, solver status, objective value, and objective constant.
+        """
+
+        pypsa_network_copy = self._copy_pypsa_network()
+        solver_status, termination_condition = pypsa_network_copy.optimize(
+            snapshots=(
+                snapshots.to_index()  # pyright: ignore[reportArgumentType]
+                if snapshots is not None
+                else None
+            ),
+            multi_investment_periods=multi_investment_periods,
+            transmission_losses=transmission_losses,
+            linearized_unit_commitment=linearized_unit_commitment,
+            extra_functionality=extra_functionality,
+            assign_all_duals=assign_all_duals,
+            solver_name=solver_name,
+            solver_options=solver_options,
+            compute_infeasibilities=compute_infeasibilities,
+            **kwargs,
+        )
+        status = Status(
+            status=SolverStatus(solver_status),
+            termination_condition=TerminationCondition(termination_condition),
+        )
+        optimized_network = OptimizedNetwork(pypsa_network_copy, self._snapshots_class)
+        objective = pypsa_network_copy.objective
+        objective_constant = cast(float, pypsa_network_copy.objective_constant)
+        return optimized_network, status, objective, objective_constant
+
+    def optimize_with_rolling_horizon(
+        self,
+        horizon: int,
+        overlap: int = 0,
+        snapshots: T | None = None,
+        multi_investment_periods: bool = False,
+        transmission_losses: int = 0,
+        linearized_unit_commitment: bool = False,
+        extra_functionality: Callable[[pypsa.Network, pd.Index], None] | None = None,
+        assign_all_duals: bool = False,
+        solver_name: str | None = None,
+        solver_options: dict[str, Any] | None = None,
+        compute_infeasibilities: bool = False,
+        **kwargs: Any,
+    ) -> OptimizedNetwork[T]:
+        """Optimize the network in a rolling horizon fashion.
+
+        Solver status, objective value, and objective constant are per-horizon and thus not
+        returned. However, solver status and objective value are logged per-horizon.
+
+        Returns:
+            Optimized network.
+        """
+
+        pypsa_network_copy = self._copy_pypsa_network()
+        pypsa_network_copy.optimize.optimize_with_rolling_horizon(  # pyright: ignore[reportUnknownMemberType]
+            snapshots=(
+                snapshots.to_index()  # pyright: ignore[reportArgumentType]
+                if snapshots is not None
+                else None
+            ),
+            multi_investment_periods=multi_investment_periods,
+            transmission_losses=transmission_losses,
+            linearized_unit_commitment=linearized_unit_commitment,
+            horizon=horizon,
+            overlap=overlap,
+            extra_functionality=extra_functionality,
+            assign_all_duals=assign_all_duals,
+            solver_name=solver_name,
+            solver_options=solver_options,
+            compute_infeasibilities=compute_infeasibilities,
+            **kwargs,
+        )
+        return OptimizedNetwork(pypsa_network_copy, self._snapshots_class)
+
+
 class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
     PypsaNetworkDerivative
 ):
@@ -282,12 +450,12 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
 
 
 class Network[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    _ComponentsAccessible[T], _Simulatable[T]
+    _ComponentsAccessible[T], _Optimizable[T], _Simulatable[T]
 ):
     def __init__(self, snapshots: T = Static()) -> None:
         """Create a `typsa.Network` with the given snapshots."""
 
-        super().__init__(pypsa.Network(), self._snapshots_class)
+        super().__init__(pypsa.Network(), type(snapshots))
 
         # Type annotation of `snapshots` argument of `pypsa.Network.set_snapshots`
         # is incorrect:
@@ -381,95 +549,28 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
         }
         self._pypsa_network.add(**kwargs)
 
-    def optimize(
+    def determine_network_topology(
         self,
-        snapshots: T | None = None,
-        multi_investment_periods: bool = False,
-        transmission_losses: int = 0,
-        linearized_unit_commitment: bool = False,
-        extra_functionality: Callable[[pypsa.Network, pd.Index], None] | None = None,
-        assign_all_duals: bool = False,
-        solver_name: str | None = None,
-        solver_options: dict[str, Any] | None = None,
-        compute_infeasibilities: bool = False,
-        **kwargs: Any,
-    ) -> tuple[OptimizedNetwork[T], Status]:
-        """Optimize the network (model and solve its optimization problem).
-
-        Returns:
-            Optimized network and solver status.
-        """
-
+        investment_period: int | str | None = None,
+        skip_isolated_buses: bool = False,
+    ) -> TopologyDeterminedNetwork[T]:
+        """Build `SubNetwork`s from topology."""
         pypsa_network_copy = self._copy_pypsa_network()
-        solver_status, termination_condition = pypsa_network_copy.optimize(
-            snapshots=(
-                snapshots.to_index()  # pyright: ignore[reportArgumentType]
-                if snapshots is not None
-                else None
-            ),
-            multi_investment_periods=multi_investment_periods,
-            transmission_losses=transmission_losses,
-            linearized_unit_commitment=linearized_unit_commitment,
-            extra_functionality=extra_functionality,
-            assign_all_duals=assign_all_duals,
-            solver_name=solver_name,
-            solver_options=solver_options,
-            compute_infeasibilities=compute_infeasibilities,
-            **kwargs,
+        pypsa_network_copy.determine_network_topology(
+            investment_period=investment_period,
+            skip_isolated_buses=skip_isolated_buses,
         )
-        status = Status(
-            status=SolverStatus(solver_status),
-            termination_condition=TerminationCondition(termination_condition),
-        )
-        return OptimizedNetwork(pypsa_network_copy, self._snapshots_class), status
-
-    def optimize_with_rolling_horizon(
-        self,
-        horizon: int,
-        overlap: int = 0,
-        snapshots: T | None = None,
-        multi_investment_periods: bool = False,
-        transmission_losses: int = 0,
-        linearized_unit_commitment: bool = False,
-        extra_functionality: Callable[[pypsa.Network, pd.Index], None] | None = None,
-        assign_all_duals: bool = False,
-        solver_name: str | None = None,
-        solver_options: dict[str, Any] | None = None,
-        compute_infeasibilities: bool = False,
-        **kwargs: Any,
-    ) -> OptimizedNetwork[T]:
-        """Optimize the network in a rolling horizon fashion.
-
-        Solver status is not returned but logged for each horizon.
-
-        Returns:
-            Optimized network.
-        """
-
-        pypsa_network_copy = self._copy_pypsa_network()
-        pypsa_network_copy.optimize.optimize_with_rolling_horizon(  # pyright: ignore[reportUnknownMemberType]
-            snapshots=(
-                snapshots.to_index()  # pyright: ignore[reportArgumentType]
-                if snapshots is not None
-                else None
-            ),
-            multi_investment_periods=multi_investment_periods,
-            transmission_losses=transmission_losses,
-            linearized_unit_commitment=linearized_unit_commitment,
-            horizon=horizon,
-            overlap=overlap,
-            extra_functionality=extra_functionality,
-            assign_all_duals=assign_all_duals,
-            solver_name=solver_name,
-            solver_options=solver_options,
-            compute_infeasibilities=compute_infeasibilities,
-            **kwargs,
-        )
-        return OptimizedNetwork(pypsa_network_copy, self._snapshots_class)
+        return TopologyDeterminedNetwork(pypsa_network_copy, self._snapshots_class)
 
 
-class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots](
-    _ComponentsAccessible[T], _Simulatable[T]
+class TopologyDeterminedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots](
+    _ComponentsAccessible[T], _Optimizable[T], _Simulatable[T], _SubNetworksAccessible
+):
+    pass
+
+
+class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    _ComponentsAccessible[T], _Simulatable[T], _SubNetworksAccessible
 ):
     @property
     def static_results(self) -> OptimizationStaticResults:

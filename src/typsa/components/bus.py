@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 import pandas
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from typsa.literal_types import ControlType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
@@ -13,7 +13,6 @@ from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnap
 from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
-    BaseStaticResults,
 )
 
 
@@ -52,15 +51,18 @@ class Bus[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseCompon
     """Voltage magnitude set point, per unit of `v_nom`."""
 
 
-class BusOptimizationStaticResults(BaseStaticResults):
+class BusControl(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     control: ControlType = "PQ"
     """P,Q,V control strategy for power flow, must be "PQ", "PV" or "Slack". Note that this attribute is an output inherited from the controls of the generators attached to the bus."""
 
+
+class SlackBusControl(BusControl):
+    control: Literal["Slack"] = "Slack"  # pyright: ignore[reportIncompatibleVariableOverride]
+
     generator: str
     """Name of slack generator attached to slack bus."""
-
-    sub_network: str
-    """Name of connected sub-network to which bus belongs. This attribute is set by `n.determine_network_topology()`."""
 
 
 class _BusDynamicResults(BaseDynamicResults):

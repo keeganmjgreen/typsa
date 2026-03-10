@@ -19,7 +19,6 @@ from .components.bus import (
     Bus,
     BusNonlinearPfDynamicResults,
     BusOptimizationDynamicResults,
-    BusOptimizationStaticResults,
     BusPfDynamicResults,
 )
 from .components.generator import (
@@ -77,7 +76,6 @@ from .components.store import (
     StoreOptimizationDynamicResults,
     StorePfDynamicResults,
 )
-from .components.sub_network import SubNetwork, SubNetworkOptimizationStaticResults
 from .components.transformer import (
     BaseTransformer,
     ExtendableTransformer,
@@ -118,15 +116,6 @@ class OptimizationStaticResults(PypsaNetworkDerivative):
         return self.all_capacities[extendable_component.name]
 
     @property
-    def of_all_buses(self) -> dict[str, BusOptimizationStaticResults]:
-        """Access static optimization results for all `Bus` instances."""
-        return self._get_static_results(Bus, BusOptimizationStaticResults)
-
-    def of_bus(self, bus: Bus) -> BusOptimizationStaticResults:
-        """Access static optimization results for a `Bus` instance."""
-        return self.of_all_buses[bus.name]
-
-    @property
     def of_all_global_constraints(
         self,
     ) -> dict[str, GlobalConstraintOptimizationStaticResults]:
@@ -164,17 +153,6 @@ class OptimizationStaticResults(PypsaNetworkDerivative):
     ) -> ShuntImpedanceOptimizationStaticResults:
         """Access static optimization results for a `ShuntImpedance` instance."""
         return self.of_all_shunt_impedances[shunt_impedance.name]
-
-    @property
-    def of_all_sub_networks(self) -> dict[str, SubNetworkOptimizationStaticResults]:
-        """Access static optimization results for all `SubNetwork` instances."""
-        return self._get_static_results(SubNetwork, SubNetworkOptimizationStaticResults)
-
-    def of_sub_network(
-        self, sub_network: SubNetwork
-    ) -> SubNetworkOptimizationStaticResults:
-        """Access static optimization results for a `SubNetwork` instance."""
-        return self.of_all_sub_networks[sub_network.name]
 
     @property
     def of_all_transformers(self) -> dict[str, TransformerOptimizationStaticResults]:
