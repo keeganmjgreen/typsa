@@ -231,8 +231,58 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
         }
 
 
-class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
-    _ComponentsAccessible[T]
+class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
+    PypsaNetworkDerivative
+):
+    def lpf(
+        self,
+        snapshots: T | None = None,
+        skip_pre: bool = False,
+    ) -> LinearPowerFlowDynamicResults:
+        """Run linearized power flow on the optimized network."""
+        pypsa_network_copy = self._copy_pypsa_network()
+        pypsa_network_copy.optimize.fix_optimal_capacities()
+        pypsa_network_copy.optimize.fix_optimal_dispatch()
+        pypsa_network_copy.lpf(  # pyright: ignore[reportUnknownMemberType]
+            snapshots=(
+                snapshots.to_index()  # pyright: ignore[reportArgumentType]
+                if snapshots is not None
+                else None
+            ),
+            skip_pre=skip_pre,
+        )
+        return LinearPowerFlowDynamicResults(pypsa_network_copy)
+
+    def pf(
+        self,
+        snapshots: T | None = None,
+        skip_pre: bool = False,
+        x_tol: float = 1e-6,
+        use_seed: bool = False,
+        distribute_slack: bool = False,
+        slack_weights: str = "p_set",
+    ) -> NonlinearPowerFlowDynamicResults:
+        """Run nonlinear power flow on the optimized network."""
+        pypsa_network_copy = self._copy_pypsa_network()
+        pypsa_network_copy.optimize.fix_optimal_capacities()
+        pypsa_network_copy.optimize.fix_optimal_dispatch()
+        pypsa_network_copy.pf(  # pyright: ignore[reportUnknownMemberType]
+            snapshots=(
+                snapshots.to_index()  # pyright: ignore[reportArgumentType]
+                if snapshots is not None
+                else None
+            ),
+            skip_pre=skip_pre,
+            x_tol=x_tol,
+            use_seed=use_seed,
+            distribute_slack=distribute_slack,
+            slack_weights=slack_weights,
+        )
+        return NonlinearPowerFlowDynamicResults(pypsa_network_copy)
+
+
+class Network[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
+    _ComponentsAccessible[T], _Simulatable[T]
 ):
     def __init__(self, snapshots: T = Static()) -> None:
         """Create a `typsa.Network` with the given snapshots."""
@@ -419,7 +469,7 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots](
 
 
 class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots](
-    _ComponentsAccessible[T]
+    _ComponentsAccessible[T], _Simulatable[T]
 ):
     @property
     def static_results(self) -> OptimizationStaticResults:
@@ -430,63 +480,3 @@ class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots](
     def dynamic_results(self) -> OptimizationDynamicResults:
         """Access dynamic optimization results."""
         return OptimizationDynamicResults(self._pypsa_network)
-
-    def simulation(
-        self, snapshots: T | None = None, skip_pre: bool = False
-    ) -> NetworkSimulationAccessor:
-        """Access simulation methods."""
-        pypsa_network_copy = self._copy_pypsa_network()
-        pypsa_network_copy.optimize.fix_optimal_capacities()
-        pypsa_network_copy.optimize.fix_optimal_dispatch()
-        return NetworkSimulationAccessor(
-            pypsa_network_copy,
-            snapshots=(
-                snapshots.to_index()  # pyright: ignore[reportArgumentType]
-                if snapshots is not None
-                else None
-            ),
-            skip_pre=skip_pre,
-        )
-
-
-class NetworkSimulationAccessor(PypsaNetworkDerivative):
-    snapshots: Sequence[Any] | None
-    skip_pre: bool
-
-    def __init__(
-        self,
-        pypsa_network: pypsa.Network,
-        snapshots: Sequence[Any] | None = None,
-        skip_pre: bool = False,
-    ) -> None:
-        super().__init__(pypsa_network)
-        self.snapshots = snapshots
-        self.skip_pre = skip_pre
-
-    def lpf(self) -> LinearPowerFlowDynamicResults:
-        """Run linearized power flow on the optimized network."""
-        pypsa_network_copy = self._copy_pypsa_network()
-        pypsa_network_copy.lpf(  # pyright: ignore[reportUnknownMemberType]
-            snapshots=self.snapshots,
-            skip_pre=self.skip_pre,
-        )
-        return LinearPowerFlowDynamicResults(pypsa_network_copy)
-
-    def pf(
-        self,
-        x_tol: float = 1e-6,
-        use_seed: bool = False,
-        distribute_slack: bool = False,
-        slack_weights: str = "p_set",
-    ) -> NonlinearPowerFlowDynamicResults:
-        """Run nonlinear power flow on the optimized network."""
-        pypsa_network_copy = self._copy_pypsa_network()
-        pypsa_network_copy.pf(  # pyright: ignore[reportUnknownMemberType]
-            snapshots=self.snapshots,
-            skip_pre=self.skip_pre,
-            x_tol=x_tol,
-            use_seed=use_seed,
-            distribute_slack=distribute_slack,
-            slack_weights=slack_weights,
-        )
-        return NonlinearPowerFlowDynamicResults(pypsa_network_copy)
