@@ -120,9 +120,6 @@ class ExtendableTransformer[T: Static | TimestampSnapshots | IntegerSnapshots = 
 
 
 class TransformerOptimizationStaticResults(BaseStaticResults):
-    sub_network: str
-    """Name of connected sub-network to which transformer belongs, as calculated by `n.determine_network_topology()`."""
-
     x_pu: float = 0.0
     """Per unit series reactance calculated by `n.calculate_dependent_values()` from `x` and `n.buses.v_nom`."""
 

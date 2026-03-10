@@ -112,9 +112,6 @@ class ExtendableLine[T: Static | TimestampSnapshots | IntegerSnapshots = Static]
 
 
 class LineOptimizationStaticResults(BaseStaticResults):
-    sub_network: str
-    """Name of sub-network to which lines belongs, as calculated by `n.determine_network_topology()`."""
-
     x_pu: float = 0.0
     """Per unit series reactance calculated by `n.calculate_dependent_values()` from `x` and `n.buses.v_nom`."""
 
