@@ -98,7 +98,7 @@ print(optimized_network.dynamic_results.of_all_lines.p0)
 
 
 ```python
-pf_results = optimized_network.simulation().pf()
+pf_results = optimized_network.pf()
 ```
 
 

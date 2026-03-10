@@ -38,6 +38,7 @@
         "pydantic",
         "pymdownx",
         "pypsa",
+        "Simulatable",
         "superfences",
         "susceptance",
         "timedelta",
