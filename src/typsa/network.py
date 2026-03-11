@@ -9,6 +9,7 @@ import pandas as pd
 import pydantic
 import pypsa
 from linopy.constants import SolverStatus, Status, TerminationCondition
+from pypsa.plot import PlotAccessor
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
 from typsa.components.bus import Bus, BusControl, Coordinates, SlackBusControl
@@ -233,6 +234,11 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
             )
             for component_name, component_dict in component_dicts.items()
         }
+
+    @property
+    def plot(self) -> PlotAccessor:
+        """Access plotting functionality."""
+        return self._pypsa_network.plot
 
 
 class _SubNetworksAccessible(PypsaNetworkDerivative):
