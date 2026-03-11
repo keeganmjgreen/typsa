@@ -41,7 +41,7 @@ class Bus[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseCompon
     carrier: str = Field(default="AC", min_length=1)
     """Carrier, such as "AC", "DC", "heat" or "gas"."""
 
-    unit: str = "MW"
+    unit: str | None = "MW"
     """Unit of the bus' carrier if the implicitly assumed unit ("MW") is inappropriate (e.g. "t/h"). Only descriptive. Does not influence any PyPSA functions."""
 
     location: str | None = None
