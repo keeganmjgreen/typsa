@@ -4,7 +4,9 @@ from collections.abc import Callable
 from typing import cast
 
 import pandas as pd
+import pydantic
 import pypsa
+from linopy.constants import SolverStatus, TerminationCondition
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
 
@@ -321,6 +323,13 @@ class OptimizationDynamicResults(_BaseDynamicResults):
         return self._get_dynamic_results(
             BaseTransformer, TransformerOptimizationDynamicResults
         )
+
+
+class OptimizationInfo(pydantic.BaseModel):
+    solver_status: SolverStatus
+    termination_condition: TerminationCondition
+    objective_value: float | None
+    objective_constant: float
 
 
 class LinearPowerFlowDynamicResults(_BaseDynamicResults):
