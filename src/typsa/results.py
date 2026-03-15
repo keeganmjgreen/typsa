@@ -448,3 +448,11 @@ class NonlinearPowerFlowDynamicResults(_BaseDynamicResults):
         return self._get_dynamic_results(
             BaseTransformer, TransformerNonlinearPfDynamicResults
         )
+
+
+class PowerFlowInfo(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+
+    n_iter: pd.DataFrame
+    error: pd.DataFrame
+    converged: pd.DataFrame

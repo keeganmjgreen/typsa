@@ -33,6 +33,7 @@ from typsa.results import (
     OptimizationDynamicResults,
     OptimizationInfo,
     OptimizationStaticResults,
+    PowerFlowInfo,
 )
 from typsa.time_variation import (
     IntegerSnapshots,
@@ -412,12 +413,12 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
         self,
         snapshots: T | None = None,
         skip_pre: bool = False,
-    ) -> LinearPowerFlowDynamicResults:
+    ) -> tuple[LinearPowerFlowDynamicResults, PowerFlowInfo]:
         """Run linearized power flow on the optimized network."""
         pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.optimize.fix_optimal_capacities()
         pypsa_network_copy.optimize.fix_optimal_dispatch()
-        pypsa_network_copy.lpf(  # pyright: ignore[reportUnknownMemberType]
+        info = pypsa_network_copy.lpf(  # pyright: ignore[reportUnknownMemberType]
             snapshots=(
                 snapshots.to_index()  # pyright: ignore[reportArgumentType]
                 if snapshots is not None
@@ -425,7 +426,9 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
             ),
             skip_pre=skip_pre,
         )
-        return LinearPowerFlowDynamicResults(pypsa_network_copy)
+        lpf_dynamic_results = LinearPowerFlowDynamicResults(pypsa_network_copy)
+        pf_info = PowerFlowInfo.model_validate(info)
+        return lpf_dynamic_results, pf_info
 
     def pf(
         self,
@@ -435,12 +438,12 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
         use_seed: bool = False,
         distribute_slack: bool = False,
         slack_weights: str = "p_set",
-    ) -> NonlinearPowerFlowDynamicResults:
+    ) -> tuple[NonlinearPowerFlowDynamicResults, PowerFlowInfo]:
         """Run nonlinear power flow on the optimized network."""
         pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.optimize.fix_optimal_capacities()
         pypsa_network_copy.optimize.fix_optimal_dispatch()
-        pypsa_network_copy.pf(  # pyright: ignore[reportUnknownMemberType]
+        info = pypsa_network_copy.pf(  # pyright: ignore[reportUnknownMemberType]
             snapshots=(
                 snapshots.to_index()  # pyright: ignore[reportArgumentType]
                 if snapshots is not None
@@ -452,7 +455,9 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
             distribute_slack=distribute_slack,
             slack_weights=slack_weights,
         )
-        return NonlinearPowerFlowDynamicResults(pypsa_network_copy)
+        pf_dynamic_results = NonlinearPowerFlowDynamicResults(pypsa_network_copy)
+        pf_info = PowerFlowInfo.model_validate(info)
+        return pf_dynamic_results, pf_info
 
 
 class Network[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
