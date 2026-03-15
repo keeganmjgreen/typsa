@@ -8,7 +8,7 @@ from typing import Any, Sequence, assert_never, cast
 import pandas as pd
 import pydantic
 import pypsa
-from linopy.constants import SolverStatus, Status, TerminationCondition
+from linopy.constants import SolverStatus, TerminationCondition
 from pypsa.plot import PlotAccessor
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
@@ -32,6 +32,7 @@ from typsa.results import (
     LinearPowerFlowDynamicResults,
     NonlinearPowerFlowDynamicResults,
     OptimizationDynamicResults,
+    OptimizationInfo,
     OptimizationStaticResults,
 )
 from typsa.time_variation import (
@@ -326,11 +327,11 @@ class _Optimizable[T: Static | TimestampSnapshots | IntegerSnapshots](
         solver_options: dict[str, Any] | None = None,
         compute_infeasibilities: bool = False,
         **kwargs: Any,
-    ) -> tuple[OptimizedNetwork[T], Status, float | None, float]:
+    ) -> tuple[OptimizedNetwork[T], OptimizationInfo]:
         """Optimize the network (model and solve its optimization problem).
 
         Returns:
-            Optimized network, solver status, objective value, and objective constant.
+            Optimized network and optimization info.
         """
 
         pypsa_network_copy = self._copy_pypsa_network()
@@ -350,14 +351,14 @@ class _Optimizable[T: Static | TimestampSnapshots | IntegerSnapshots](
             compute_infeasibilities=compute_infeasibilities,
             **kwargs,
         )
-        status = Status(
-            status=SolverStatus(solver_status),
-            termination_condition=TerminationCondition(termination_condition),
-        )
         optimized_network = OptimizedNetwork(pypsa_network_copy, self._snapshots_class)
-        objective = pypsa_network_copy.objective
-        objective_constant = cast(float, pypsa_network_copy.objective_constant)
-        return optimized_network, status, objective, objective_constant
+        optimization_info = OptimizationInfo(
+            solver_status=SolverStatus(solver_status),
+            termination_condition=TerminationCondition(termination_condition),
+            objective_value=pypsa_network_copy.objective,
+            objective_constant=cast(float, pypsa_network_copy.objective_constant),
+        )
+        return optimized_network, optimization_info
 
     def optimize_with_rolling_horizon(
         self,
@@ -376,8 +377,8 @@ class _Optimizable[T: Static | TimestampSnapshots | IntegerSnapshots](
     ) -> OptimizedNetwork[T]:
         """Optimize the network in a rolling horizon fashion.
 
-        Solver status, objective value, and objective constant are per-horizon and thus not
-        returned. However, solver status and objective value are logged per-horizon.
+        Optimization info are per-horizon and thus not returned. However, solver status and
+        objective value are logged per-horizon.
 
         Returns:
             Optimized network.
