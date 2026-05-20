@@ -241,6 +241,11 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
         """Access plotting functionality."""
         return self._pypsa_network.plot
 
+    @property
+    def statistics(self) -> pypsa.statistics.StatisticsAccessor:
+        """Access statistics functionality."""
+        return self._pypsa_network.statistics
+
 
 class _SubNetworksAccessible(PypsaNetworkDerivative):
     @property
