@@ -19,15 +19,20 @@ from typsa.components.generator import (
     Generator,
 )
 from typsa.components.global_constraint import GlobalConstraint
-from typsa.components.line import ExtendableLine, Line
+from typsa.components.line import BaseLine, ExtendableLine, Line
 from typsa.components.link import CommittableLink, ExtendableLink, Link
 from typsa.components.load import Load
 from typsa.components.shunt_impedance import ShuntImpedance
 from typsa.components.storage_unit import ExtendableStorageUnit, StorageUnit
 from typsa.components.store import ExtendableStore, Store
 from typsa.components.sub_network import SubNetwork
-from typsa.components.transformer import ExtendableTransformer, Transformer
+from typsa.components.transformer import (
+    BaseTransformer,
+    ExtendableTransformer,
+    Transformer,
+)
 from typsa.results import (
+    LinearPowerFlowContingencyResults,
     LinearPowerFlowDynamicResults,
     NonlinearPowerFlowDynamicResults,
     OptimizationDynamicResults,
@@ -356,14 +361,9 @@ class _Optimizable[T: Static | TimestampSnapshots | IntegerSnapshots](
             compute_infeasibilities=compute_infeasibilities,
             **kwargs,
         )
-        optimized_network = OptimizedNetwork(pypsa_network_copy, self._snapshots_class)
-        optimization_info = OptimizationInfo(
-            solver_status=SolverStatus(solver_status),
-            termination_condition=TerminationCondition(termination_condition),
-            objective_value=pypsa_network_copy.objective,
-            objective_constant=cast(float, pypsa_network_copy.objective_constant),
+        return self._get_optimization_results(
+            pypsa_network_copy, solver_status, termination_condition
         )
-        return optimized_network, optimization_info
 
     def optimize_with_rolling_horizon(
         self,
@@ -409,6 +409,71 @@ class _Optimizable[T: Static | TimestampSnapshots | IntegerSnapshots](
             **kwargs,
         )
         return OptimizedNetwork(pypsa_network_copy, self._snapshots_class)
+
+    def optimize_security_constrained(
+        self,
+        snapshots: T | None = None,
+        branch_outages: Sequence[BaseLine[T] | BaseTransformer[T]] | None = None,
+        multi_investment_periods: bool = False,
+        transmission_losses: int = 0,
+        linearized_unit_commitment: bool = False,
+        extra_functionality: Callable[[pypsa.Network, pd.Index], None] | None = None,
+        assign_all_duals: bool = False,
+        solver_name: str | None = None,
+        solver_options: dict[str, Any] | None = None,
+        compute_infeasibilities: bool = False,
+        **kwargs: Any,
+    ) -> tuple[OptimizedNetwork[T], OptimizationInfo]:
+        """Compute Security-Constrained Linear Optimal Power Flow (SCLOPF).
+
+        Returns:
+            Optimized network and optimization info.
+        """
+
+        pypsa_network_copy = self._copy_pypsa_network()
+        solver_status, termination_condition = (
+            pypsa_network_copy.optimize.optimize_security_constrained(  # pyright: ignore[reportUnknownMemberType]
+                snapshots=(
+                    snapshots.to_index()  # pyright: ignore[reportArgumentType]
+                    if snapshots is not None
+                    else None
+                ),
+                branch_outages=(
+                    pd.MultiIndex.from_tuples(
+                        [(branch.class_name, branch.name) for branch in branch_outages]
+                    )
+                    if branch_outages is not None
+                    else None
+                ),
+                multi_investment_periods=multi_investment_periods,
+                transmission_losses=transmission_losses,
+                linearized_unit_commitment=linearized_unit_commitment,
+                extra_functionality=extra_functionality,
+                assign_all_duals=assign_all_duals,
+                solver_name=solver_name,
+                solver_options=solver_options,
+                compute_infeasibilities=compute_infeasibilities,
+                **kwargs,
+            )
+        )
+        return self._get_optimization_results(
+            pypsa_network_copy, solver_status, termination_condition
+        )
+
+    def _get_optimization_results(
+        self,
+        pypsa_network: pypsa.Network,
+        solver_status: str,
+        termination_condition: str,
+    ) -> tuple[OptimizedNetwork[T], OptimizationInfo]:
+        optimized_network = OptimizedNetwork(pypsa_network, self._snapshots_class)
+        optimization_info = OptimizationInfo(
+            solver_status=SolverStatus(solver_status),
+            termination_condition=TerminationCondition(termination_condition),
+            objective_value=pypsa_network.objective,
+            objective_constant=cast(float, pypsa_network.objective_constant),
+        )
+        return optimized_network, optimization_info
 
 
 class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
@@ -463,6 +528,38 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
         pf_dynamic_results = NonlinearPowerFlowDynamicResults(pypsa_network_copy)
         pf_info = PowerFlowInfo.model_validate(info)
         return pf_dynamic_results, pf_info
+
+    def lpf_contingency(
+        self,
+        snapshots: T,
+        branch_outages: Sequence[BaseLine[T] | BaseTransformer[T]] | None = None,
+    ) -> LinearPowerFlowContingencyResults:
+        """Run linear power flow on the optimized network for each of the specified
+        branch outages in addition to the no-outage "base" case.
+        """
+        if len(snapshots.to_index()) != 1:
+            raise ValueError(
+                "pypsa.Network.lpf_contingency does not currently support multiple "
+                "snapshots"
+            )
+        pypsa_network_copy = self._copy_pypsa_network()
+        pypsa_network_copy.optimize.fix_optimal_capacities()
+        pypsa_network_copy.optimize.fix_optimal_dispatch()
+        df = pypsa_network_copy.lpf_contingency(  # pyright: ignore[reportUnknownMemberType]
+            snapshots=snapshots.to_index()[0],  # pyright: ignore[reportArgumentType]
+            branch_outages=(
+                pd.MultiIndex.from_tuples(
+                    [(branch.class_name, branch.name) for branch in branch_outages]
+                )
+                if branch_outages is not None
+                else None
+            ),  # pyright: ignore[reportArgumentType]
+        )
+        return LinearPowerFlowContingencyResults(
+            base_case=df["base"].to_dict(),  # pyright: ignore[reportArgumentType]
+            outage_cases=df.drop(columns=["base"]).to_dict(),  # pyright: ignore[reportArgumentType]
+        )
+        return df
 
 
 class Network[T: Static | TimestampSnapshots | IntegerSnapshots = Static](

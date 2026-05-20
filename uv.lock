@@ -669,6 +669,7 @@ wheels = [
 name = "griffelib"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/06/eccbd311c9e2b3ca45dbc063b93134c57a1ccc7607c5e545264ad092c4a9/griffelib-2.0.0.tar.gz", hash = "sha256:e504d637a089f5cab9b5daf18f7645970509bf4f53eda8d79ed71cce8bd97934", size = 166312, upload-time = "2026-03-23T21:06:55.954Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4d/51/c936033e16d12b627ea334aaaaf42229c37620d0f15593456ab69ab48161/griffelib-2.0.0-py3-none-any.whl", hash = "sha256:01284878c966508b6d6f1dbff9b6fa607bc062d8261c5c7253cb285b06422a7f", size = 142004, upload-time = "2026-02-09T19:09:40.561Z" },
 ]
@@ -1807,7 +1808,7 @@ wheels = [
 
 [[package]]
 name = "pypsa"
-version = "1.0.7"
+version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "deprecation" },
@@ -1820,6 +1821,7 @@ dependencies = [
     { name = "networkx" },
     { name = "numpy" },
     { name = "pandas" },
+    { name = "platformdirs" },
     { name = "plotly" },
     { name = "pydeck" },
     { name = "scipy" },
@@ -1828,9 +1830,9 @@ dependencies = [
     { name = "validators" },
     { name = "xarray" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cb/f8/dfb73925255714c0a450849f3026537950839ec15d8ac11ab2e6f6f68e9e/pypsa-1.0.7.tar.gz", hash = "sha256:5f26d19eba7201c5a2f46413eef1b717bbb5f9bfedfb66d49c488c5c10f49064", size = 12850354, upload-time = "2026-01-13T13:23:30.941Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1d/40/bd7be1b98e2a094bd9b96793d94291d241059fb5ea77c6c446993c0c0360/pypsa-1.2.0.tar.gz", hash = "sha256:36c71ac19c9d1a379a671fbf333bde1a714ca742767fa168b40edbdfe3a1b8b1", size = 13049881, upload-time = "2026-04-22T07:14:34.81Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2b/4c/dfd10c54c2b43fafc319749cca75d2d12c141595db8bbdc075ff040f32bf/pypsa-1.0.7-py3-none-any.whl", hash = "sha256:cbda31994040fc9fa43bb94e82022a6752f9c99bda414d74232bf7fdefa2176e", size = 318592, upload-time = "2026-01-13T13:23:28.99Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/63/0b45d680612131fa26f1fd3766774d7c95766537db5cc86dbbd96c07f01b/pypsa-1.2.0-py3-none-any.whl", hash = "sha256:76e1fdd459b8328edd0edc34a7e08350b4f1ccc2d002492d144238bc64ca481c", size = 358326, upload-time = "2026-04-22T07:14:32.502Z" },
 ]
 
 [[package]]
@@ -2384,7 +2386,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "pydantic", specifier = ">=2,<3" },
-    { name = "pypsa", specifier = ">=1,<2" },
+    { name = "pypsa", specifier = ">=1.2,<2" },
 ]
 
 [package.metadata.requires-dev]

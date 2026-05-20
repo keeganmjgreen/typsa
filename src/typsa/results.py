@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import cast
+from typing import Literal, cast
 
 import pandas as pd
 import pydantic
@@ -447,6 +447,26 @@ class NonlinearPowerFlowDynamicResults(_BaseDynamicResults):
         """
         return self._get_dynamic_results(
             BaseTransformer, TransformerNonlinearPfDynamicResults
+        )
+
+
+type PassiveBranch = Literal["Line", "Transformer"]
+type PassiveBranchIdentifier = tuple[PassiveBranch, str]
+type LinearPowerFlowContingencyCase = dict[PassiveBranchIdentifier, float]
+
+
+class LinearPowerFlowContingencyResults(pydantic.BaseModel):
+    base_case: LinearPowerFlowContingencyCase
+    outage_cases: dict[PassiveBranchIdentifier, LinearPowerFlowContingencyCase]
+
+    def to_df(self) -> pd.DataFrame:
+        """Return a DataFrame with a row for each passive branch
+        (PassiveBranchIdentifier) and a column for the base case and each outage case
+        (Literal["base"] | PassiveBranchIdentifier).
+        """
+        return pd.concat(
+            [pd.Series(self.base_case, name="base"), pd.DataFrame(self.outage_cases)],
+            axis="columns",
         )
 
 

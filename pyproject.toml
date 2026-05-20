@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "pydantic>=2,<3", # Pydantic V1 not tested.
-    "pypsa>=1,<2",    # A specific version of TyPSA is not necessarily backwards compatible with an older minor PyPSA version, and is not necessarily forwards compatible with newer major PyPSA version.
+    "pypsa>=1.2,<2",  # A specific version of TyPSA is not necessarily backwards compatible with an older minor PyPSA version, and is not necessarily forwards compatible with newer major PyPSA version.
 ]
 
 [dependency-groups]
