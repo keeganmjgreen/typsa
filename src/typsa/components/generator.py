@@ -93,7 +93,7 @@ class BaseGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 class Generator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     BaseGenerator[T]
 ):
-    p_nom: float | None = Field(default=None, ge=0.0)
+    p_nom: float = Field(default=0.0, ge=0.0)
     """Nominal power for limits  on `p` in optimization."""
 
     p_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]

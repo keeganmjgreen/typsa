@@ -91,7 +91,7 @@ class BaseLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
 
 class Link[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseLink[T]):
-    p_nom: float | None = Field(default=None, ge=0.0)
+    p_nom: float = Field(default=0.0, ge=0.0)
     """Limit of power which can pass through link (in units of `bus0`)."""
 
     p_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]

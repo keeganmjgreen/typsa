@@ -114,7 +114,7 @@ class BaseStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static
 class StorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     BaseStorageUnit[T]
 ):
-    p_nom: float | None = Field(default=None, ge=0.0)
+    p_nom: float = Field(default=0.0, ge=0.0)
     """Nominal power for limits on `p` in optimisation."""
 
     p_nom_extendable: Literal[False] = False  # pyright: ignore[reportIncompatibleVariableOverride]
