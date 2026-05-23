@@ -653,8 +653,9 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     def _add_component(self, component: BaseComponent[T]) -> None:
         kwargs = dict(component)
         kwargs["class_name"] = component.class_name
-        if "parameters" in kwargs:
-            kwargs.update(kwargs.pop("parameters"))
+        for sub_dict_name in ["coordinates", "parameters"]:
+            if sub_dict_name in kwargs:
+                kwargs.update(kwargs.pop(sub_dict_name))
         kwargs: dict[str, Any] = {
             k: v.input if isinstance(v, (TimestampedSeries, RangedSeries)) else v
             for k, v in kwargs.items()
