@@ -9,6 +9,7 @@ import pandas as pd
 import pydantic
 import pypsa
 from linopy.constants import SolverStatus, TerminationCondition
+from pydantic import dataclasses
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
 from typsa.components.bus import Bus, BusControl, Coordinates, SlackBusControl
@@ -53,11 +54,36 @@ from typsa.time_variation import (
     TimestampSnapshots,
 )
 
-from .components._base_component import BaseComponent, BaseExtendableComponent
+from .components._base_component import (
+    BaseComponent,
+    BaseExtendableComponent,
+    BusTied,
+)
 
 
 class _HasSnapshotsClass[T: Static | TimestampSnapshots | IntegerSnapshots]:
     _snapshots_class: type[T]
+
+
+@dataclasses.dataclass
+class ComponentCollection[T]:
+    _components: dict[str, T]
+
+    @property
+    def as_dict(self) -> dict[str, T]:
+        return self._components
+
+
+@dataclasses.dataclass
+class BusTiedComponentCollection[T: BusTied](ComponentCollection[T]):
+    _bus_names: list[str]
+
+    @property
+    def grouped_by_bus(self) -> dict[str, dict[str, T]]:
+        return {
+            bus_name: {k: v for k, v in self._components.items() if v.bus == bus_name}
+            for bus_name in self._bus_names
+        }
 
 
 class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
@@ -68,79 +94,103 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
         self._snapshots_class = snapshots_class
 
     @property
-    def buses(self) -> dict[str, Bus[T]]:
+    def buses(self) -> ComponentCollection[Bus[T]]:
         """Get all `Bus` instances."""
-        return self._get_components(Bus, Bus[T])
+        return ComponentCollection(self._get_components(Bus, Bus[T]))
 
     @property
-    def carriers(self) -> dict[str, Carrier]:
+    def carriers(self) -> ComponentCollection[Carrier]:
         """Get all `Carrier` instances."""
-        return self._get_components(Carrier, Carrier)
+        return ComponentCollection(self._get_components(Carrier, Carrier))
 
     @property
     def generators(
         self,
-    ) -> dict[str, Generator[T] | ExtendableGenerator[T] | CommittableGenerator[T]]:
+    ) -> BusTiedComponentCollection[
+        Generator[T] | ExtendableGenerator[T] | CommittableGenerator[T]
+    ]:
         """Get all `Generator`, `ExtendableGenerator`, and `CommittableGenerator`
         instances.
         """
-        return (
-            self._get_components(BaseGenerator, Generator[T])
-            | self._get_components(BaseGenerator, ExtendableGenerator[T])
-            | self._get_components(BaseGenerator, CommittableGenerator[T])
+        return BusTiedComponentCollection(
+            (
+                self._get_components(BaseGenerator, Generator[T])
+                | self._get_components(BaseGenerator, ExtendableGenerator[T])
+                | self._get_components(BaseGenerator, CommittableGenerator[T])
+            ),
+            list(self.buses.as_dict.keys()),
         )
 
     @property
-    def global_constraints(self) -> dict[str, GlobalConstraint]:
+    def global_constraints(self) -> ComponentCollection[GlobalConstraint]:
         """Get all `GlobalConstraint` instances."""
-        return self._get_components(GlobalConstraint, GlobalConstraint)
-
-    @property
-    def lines(self) -> dict[str, Line[T] | ExtendableLine[T]]:
-        """Get all `Line` and `ExtendableLine` instances."""
-        return self._get_components(BaseLine, Line[T]) | self._get_components(
-            BaseLine, ExtendableLine[T]
+        return ComponentCollection(
+            self._get_components(GlobalConstraint, GlobalConstraint)
         )
 
     @property
-    def links(self) -> dict[str, Link[T] | ExtendableLink[T] | CommittableLink[T]]:
+    def lines(self) -> ComponentCollection[Line[T] | ExtendableLine[T]]:
+        """Get all `Line` and `ExtendableLine` instances."""
+        return ComponentCollection(
+            self._get_components(BaseLine, Line[T])
+            | self._get_components(BaseLine, ExtendableLine[T])
+        )
+
+    @property
+    def links(
+        self,
+    ) -> ComponentCollection[Link[T] | ExtendableLink[T] | CommittableLink[T]]:
         """Get all `Link`, `ExtendableLink`, and `CommittableLink` instances."""
-        return (
+        return ComponentCollection(
             self._get_components(BaseLink, Link[T])
             | self._get_components(BaseLink, ExtendableLink[T])
             | self._get_components(BaseLink, CommittableLink[T])
         )
 
     @property
-    def loads(self) -> dict[str, Load[T]]:
+    def loads(self) -> BusTiedComponentCollection[Load[T]]:
         """Get all `Load` instances."""
-        return self._get_components(Load, Load[T])
-
-    @property
-    def shunt_impedances(self) -> dict[str, ShuntImpedance]:
-        """Get all `ShuntImpedance` instances."""
-        return self._get_components(ShuntImpedance, ShuntImpedance)
-
-    @property
-    def storage_units(self) -> dict[str, StorageUnit[T] | ExtendableStorageUnit[T]]:
-        """Get all `StorageUnit` and `ExtendableStorageUnit` instances."""
-        return self._get_components(
-            BaseStorageUnit, StorageUnit[T]
-        ) | self._get_components(BaseStorageUnit, ExtendableStorageUnit[T])
-
-    @property
-    def stores(self) -> dict[str, Store[T] | ExtendableStore[T]]:
-        """Get all `Store` and `ExtendableStore` instances."""
-        return self._get_components(BaseStore, Store[T]) | self._get_components(
-            BaseStore, ExtendableStore[T]
+        return BusTiedComponentCollection(
+            self._get_components(Load, Load[T]), list(self.buses.as_dict.keys())
         )
 
     @property
-    def transformers(self) -> dict[str, Transformer[T] | ExtendableTransformer[T]]:
+    def shunt_impedances(self) -> BusTiedComponentCollection[ShuntImpedance]:
+        """Get all `ShuntImpedance` instances."""
+        return BusTiedComponentCollection(
+            self._get_components(ShuntImpedance, ShuntImpedance),
+            list(self.buses.as_dict.keys()),
+        )
+
+    @property
+    def storage_units(
+        self,
+    ) -> BusTiedComponentCollection[StorageUnit[T] | ExtendableStorageUnit[T]]:
+        """Get all `StorageUnit` and `ExtendableStorageUnit` instances."""
+        return BusTiedComponentCollection(
+            self._get_components(BaseStorageUnit, StorageUnit[T])
+            | self._get_components(BaseStorageUnit, ExtendableStorageUnit[T]),
+            list(self.buses.as_dict.keys()),
+        )
+
+    @property
+    def stores(self) -> BusTiedComponentCollection[Store[T] | ExtendableStore[T]]:
+        """Get all `Store` and `ExtendableStore` instances."""
+        return BusTiedComponentCollection(
+            self._get_components(BaseStore, Store[T])
+            | self._get_components(BaseStore, ExtendableStore[T]),
+            list(self.buses.as_dict.keys()),
+        )
+
+    @property
+    def transformers(
+        self,
+    ) -> ComponentCollection[Transformer[T] | ExtendableTransformer[T]]:
         """Get all `Transformer` and `ExtendableTransformer` instances."""
-        return self._get_components(
-            BaseTransformer, Transformer[T]
-        ) | self._get_components(BaseTransformer, ExtendableTransformer[T])
+        return ComponentCollection(
+            self._get_components(BaseTransformer, Transformer[T])
+            | self._get_components(BaseTransformer, ExtendableTransformer[T])
+        )
 
     def _get_components[T2](
         self, base_class: type[BaseComponent], type: type[T2]

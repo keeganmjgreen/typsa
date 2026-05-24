@@ -10,14 +10,11 @@ from pydantic import Field
 from typsa.literal_types import ControlType, SignType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
-from ._base_component import (
-    BaseDynamicResults,
-    PNomExtendableComponent,
-)
+from ._base_component import BaseDynamicResults, BusTied, PNomExtendableComponent
 
 
 class BaseGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    PNomExtendableComponent[T]
+    PNomExtendableComponent[T], BusTied
 ):
     """Power generator for the bus carrier it attaches to.
 
@@ -25,9 +22,6 @@ class BaseGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     """
 
     class_name: ClassVar = "Generator"
-
-    bus: str = Field(min_length=1)
-    """Name of bus to which generator is attached."""
 
     control: ControlType = "PQ"
     """P,Q,V control strategy for power flow, must be "PQ", "PV" or "Slack". Only relevant for "AC" and "DC" buses."""

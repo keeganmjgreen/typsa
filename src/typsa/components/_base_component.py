@@ -1,5 +1,6 @@
 from typing import ClassVar
 
+import pydantic
 from pydantic import BaseModel, ConfigDict, Field
 
 from typsa.time_variation import IntegerSnapshots, Static, TimestampSnapshots
@@ -14,6 +15,11 @@ class BaseComponent[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
     name: str = Field(min_length=1)
     """Unique name."""
+
+
+class BusTied(pydantic.BaseModel):
+    bus: str = Field(min_length=1)
+    """Name of bus to which the component is attached."""
 
 
 class Capacity(BaseModel):

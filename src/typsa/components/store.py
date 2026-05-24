@@ -10,14 +10,11 @@ from pydantic import Field
 from typsa.literal_types import SignType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
-from ._base_component import (
-    BaseDynamicResults,
-    ENomExtendableComponent,
-)
+from ._base_component import BaseDynamicResults, BusTied, ENomExtendableComponent
 
 
 class BaseStore[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    ENomExtendableComponent[T]
+    ENomExtendableComponent[T], BusTied
 ):
     """Stores provide fundamental inter-temporal storage functionality not limited in charging or discharging power.
 
@@ -25,9 +22,6 @@ class BaseStore[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     """
 
     class_name: ClassVar = "Store"
-
-    bus: str = Field(min_length=1)
-    """Name of bus to which store is attached."""
 
     carrier: str | None = Field(default=None, min_length=1)
     """Carrier of the store."""

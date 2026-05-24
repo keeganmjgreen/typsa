@@ -14,19 +14,17 @@ from ._base_component import (
     BaseComponent,
     BaseDynamicResults,
     BaseStaticResults,
+    BusTied,
 )
 
 
-class ShuntImpedance(BaseComponent[Static]):
+class ShuntImpedance(BaseComponent[Static], BusTied):
     """Shunt with voltage-dependent admittance.
 
     [PyPSA user guide for this component.](https://docs.pypsa.org/latest/user-guide/components/shunt_impedances/)
     """
 
     class_name: ClassVar = "ShuntImpedance"
-
-    bus: str = Field(min_length=1)
-    """Name of bus to which shunt impedance is attached."""
 
     g: float = Field(default=0.0, ge=0.0)
     """Shunt conductivity."""

@@ -10,11 +10,11 @@ from pydantic import Field
 from typsa.literal_types import SignType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
-from ._base_component import BaseComponent, BaseDynamicResults
+from ._base_component import BaseComponent, BaseDynamicResults, BusTied
 
 
 class Load[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    BaseComponent[T]
+    BaseComponent[T], BusTied
 ):
     """Loads represent a demand at the bus they are connected to (e.g. PQ power consumer).
 
@@ -22,9 +22,6 @@ class Load[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     """
 
     class_name: ClassVar = "Load"
-
-    bus: str = Field(min_length=1)
-    """Name of bus to which load is attached."""
 
     carrier: str | None = Field(default=None, min_length=1)
     """Carrier of the load."""

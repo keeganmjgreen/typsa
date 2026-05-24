@@ -10,14 +10,11 @@ from pydantic import Field
 from typsa.literal_types import ControlType, SignType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
-from ._base_component import (
-    BaseDynamicResults,
-    PNomExtendableComponent,
-)
+from ._base_component import BaseDynamicResults, BusTied, PNomExtendableComponent
 
 
 class BaseStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    PNomExtendableComponent[T]
+    PNomExtendableComponent[T], BusTied
 ):
     """Storage units enable inter-temporal energy shifting with fixed nominal-energy-to-nominal-power ratio.
 
@@ -25,9 +22,6 @@ class BaseStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = Static
     """
 
     class_name: ClassVar = "StorageUnit"
-
-    bus: str = Field(min_length=1)
-    """Name of bus to which storage unit is attached."""
 
     control: ControlType = "PQ"
     """P,Q,V control strategy for PF, must be "PQ", "PV" or "Slack"."""

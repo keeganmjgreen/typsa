@@ -9,10 +9,7 @@ from pydantic import BaseModel, Field
 
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
-from ._base_component import (
-    BaseDynamicResults,
-    PNomExtendableComponent,
-)
+from ._base_component import BaseDynamicResults, PNomExtendableComponent
 
 type _BusName = str
 
