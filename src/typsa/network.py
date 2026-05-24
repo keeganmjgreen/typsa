@@ -14,17 +14,22 @@ from typsa._pypsa_network_derivative import PypsaNetworkDerivative
 from typsa.components.bus import Bus, BusControl, Coordinates, SlackBusControl
 from typsa.components.carrier import Carrier
 from typsa.components.generator import (
+    BaseGenerator,
     CommittableGenerator,
     ExtendableGenerator,
     Generator,
 )
 from typsa.components.global_constraint import GlobalConstraint
 from typsa.components.line import BaseLine, ExtendableLine, Line
-from typsa.components.link import CommittableLink, ExtendableLink, Link
+from typsa.components.link import BaseLink, CommittableLink, ExtendableLink, Link
 from typsa.components.load import Load
 from typsa.components.shunt_impedance import ShuntImpedance
-from typsa.components.storage_unit import ExtendableStorageUnit, StorageUnit
-from typsa.components.store import ExtendableStore, Store
+from typsa.components.storage_unit import (
+    BaseStorageUnit,
+    ExtendableStorageUnit,
+    StorageUnit,
+)
+from typsa.components.store import BaseStore, ExtendableStore, Store
 from typsa.components.sub_network import SubNetwork
 from typsa.components.transformer import (
     BaseTransformer,
@@ -65,12 +70,12 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
     @property
     def buses(self) -> dict[str, Bus[T]]:
         """Get all `Bus` instances."""
-        return cast(dict[str, Bus[T]], self._get_components(Bus))
+        return self._get_components(Bus, Bus[T])
 
     @property
     def carriers(self) -> dict[str, Carrier]:
         """Get all `Carrier` instances."""
-        return self._get_components(Carrier)
+        return self._get_components(Carrier, Carrier)
 
     @property
     def generators(
@@ -79,104 +84,74 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
         """Get all `Generator`, `ExtendableGenerator`, and `CommittableGenerator`
         instances.
         """
-        return {
-            **cast(
-                dict[str, Generator[T]],
-                self._get_components(Generator),
-            ),
-            **cast(
-                dict[str, ExtendableGenerator[T]],
-                self._get_components(ExtendableGenerator),
-            ),
-            **cast(
-                dict[str, CommittableGenerator[T]],
-                self._get_components(CommittableGenerator),
-            ),
-        }
+        return (
+            self._get_components(BaseGenerator, Generator[T])
+            | self._get_components(BaseGenerator, ExtendableGenerator[T])
+            | self._get_components(BaseGenerator, CommittableGenerator[T])
+        )
 
     @property
     def global_constraints(self) -> dict[str, GlobalConstraint]:
         """Get all `GlobalConstraint` instances."""
-        return self._get_components(GlobalConstraint)
+        return self._get_components(GlobalConstraint, GlobalConstraint)
 
     @property
     def lines(self) -> dict[str, Line[T] | ExtendableLine[T]]:
         """Get all `Line` and `ExtendableLine` instances."""
-        return {
-            **cast(dict[str, Line[T]], self._get_components(Line)),
-            **cast(dict[str, ExtendableLine[T]], self._get_components(ExtendableLine)),
-        }
+        return self._get_components(BaseLine, Line[T]) | self._get_components(
+            BaseLine, ExtendableLine[T]
+        )
 
     @property
     def links(self) -> dict[str, Link[T] | ExtendableLink[T] | CommittableLink[T]]:
         """Get all `Link`, `ExtendableLink`, and `CommittableLink` instances."""
-        return {
-            **cast(dict[str, Link[T]], self._get_components(Link)),
-            **cast(dict[str, ExtendableLink[T]], self._get_components(ExtendableLink)),
-            **cast(
-                dict[str, CommittableLink[T]], self._get_components(CommittableLink)
-            ),
-        }
+        return (
+            self._get_components(BaseLink, Link[T])
+            | self._get_components(BaseLink, ExtendableLink[T])
+            | self._get_components(BaseLink, CommittableLink[T])
+        )
 
     @property
-    def loads(self) -> dict[str, Load]:
+    def loads(self) -> dict[str, Load[T]]:
         """Get all `Load` instances."""
-        return self._get_components(Load)
+        return self._get_components(Load, Load[T])
 
     @property
     def shunt_impedances(self) -> dict[str, ShuntImpedance]:
         """Get all `ShuntImpedance` instances."""
-        return self._get_components(ShuntImpedance)
+        return self._get_components(ShuntImpedance, ShuntImpedance)
 
     @property
     def storage_units(self) -> dict[str, StorageUnit[T] | ExtendableStorageUnit[T]]:
         """Get all `StorageUnit` and `ExtendableStorageUnit` instances."""
-        return {
-            **cast(
-                dict[str, StorageUnit[T]],
-                self._get_components(StorageUnit),
-            ),
-            **cast(
-                dict[str, ExtendableStorageUnit[T]],
-                self._get_components(ExtendableStorageUnit),
-            ),
-        }
+        return self._get_components(
+            BaseStorageUnit, StorageUnit[T]
+        ) | self._get_components(BaseStorageUnit, ExtendableStorageUnit[T])
 
     @property
     def stores(self) -> dict[str, Store[T] | ExtendableStore[T]]:
         """Get all `Store` and `ExtendableStore` instances."""
-        return {
-            **cast(dict[str, Store[T]], self._get_components(Store)),
-            **cast(
-                dict[str, ExtendableStore[T]], self._get_components(ExtendableStore)
-            ),
-        }
+        return self._get_components(BaseStore, Store[T]) | self._get_components(
+            BaseStore, ExtendableStore[T]
+        )
 
     @property
     def transformers(self) -> dict[str, Transformer[T] | ExtendableTransformer[T]]:
         """Get all `Transformer` and `ExtendableTransformer` instances."""
-        return {
-            **cast(
-                dict[str, Transformer[T]],
-                self._get_components(Transformer),
-            ),
-            **cast(
-                dict[str, ExtendableTransformer[T]],
-                self._get_components(ExtendableTransformer),
-            ),
-        }
+        return self._get_components(
+            BaseTransformer, Transformer[T]
+        ) | self._get_components(BaseTransformer, ExtendableTransformer[T])
 
-    def _get_components[T2: BaseComponent](
-        self, component_class: type[T2]
+    def _get_components[T2](
+        self, base_class: type[BaseComponent], type: type[T2]
     ) -> dict[str, T2]:
-        static_df = self._get_pypsa_network_components(component_class).static
-        if issubclass(component_class, BaseExtendableComponent):
-            field_name = f"{component_class.EXTENDABLE_COLUMN_PREFIX}_extendable"
+        static_df = self._get_pypsa_network_components(base_class).static
+        if issubclass(base_class, BaseExtendableComponent):
+            field_name = f"{base_class.EXTENDABLE_COLUMN_PREFIX}_extendable"
             static_df = cast(
                 pd.DataFrame,
                 static_df.loc[
-                    static_df[field_name]
-                    == component_class.model_fields[field_name].default
+                    static_df[field_name] == base_class.model_fields[field_name].default
                 ],
             )
         committable = "committable"
@@ -185,7 +160,7 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
                 pd.DataFrame,
                 static_df.loc[
                     static_df[committable]
-                    == component_class.model_fields[committable].default
+                    == base_class.model_fields[committable].default
                 ],
             )
         component_dicts = {
@@ -193,7 +168,7 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
         }
         dynamic_dfs = cast(
             dict[str, pd.DataFrame],
-            self._get_pypsa_network_components(component_class).dynamic,
+            self._get_pypsa_network_components(base_class).dynamic,
         )
         if issubclass(self._snapshots_class, Static):
             series_class = None
@@ -209,7 +184,7 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
                 if not isinstance(v, float) or math.isfinite(v)
             }
             if (
-                issubclass(component_class, Bus)
+                issubclass(base_class, Bus)
                 and "x" in component_dicts[component_name]
                 and "y" in component_dicts[component_name]
             ):
@@ -217,11 +192,11 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
                     x=component_dicts[component_name].pop("x"),
                     y=component_dicts[component_name].pop("y"),
                 )
-            if "parameters" in component_class.model_fields:
+            if "parameters" in base_class.model_fields:
                 parameters_dict = {
                     k: component_dicts[component_name].pop(k)
                     for k in list(component_dicts[component_name].keys())
-                    if k not in component_class.model_fields
+                    if k not in base_class.model_fields
                 }
                 component_dicts[component_name]["parameters"] = parameters_dict
             component_dicts[component_name]["name"] = component_name
@@ -235,7 +210,7 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
                     }
                 )
         return {
-            component_name: component_class.model_validate(
+            component_name: pydantic.TypeAdapter(type).validate_python(
                 component_dict, extra="ignore"
             )
             for component_name, component_dict in component_dicts.items()
