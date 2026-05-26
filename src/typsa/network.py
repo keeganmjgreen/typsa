@@ -13,22 +13,20 @@ from typsa._pypsa_network_derivative import PypsaNetworkDerivative
 from typsa.components.bus import Bus, BusControl, SlackBusControl
 from typsa.components.carrier import Carrier
 from typsa.components.generator import (
-    BaseGenerator,
     CommittableGenerator,
     ExtendableGenerator,
     Generator,
 )
 from typsa.components.global_constraint import GlobalConstraint
 from typsa.components.line import BaseLine, ExtendableLine, Line
-from typsa.components.link import BaseLink, CommittableLink, ExtendableLink, Link
+from typsa.components.link import CommittableLink, ExtendableLink, Link
 from typsa.components.load import Load
 from typsa.components.shunt_impedance import ShuntImpedance
 from typsa.components.storage_unit import (
-    BaseStorageUnit,
     ExtendableStorageUnit,
     StorageUnit,
 )
-from typsa.components.store import BaseStore, ExtendableStore, Store
+from typsa.components.store import ExtendableStore, Store
 from typsa.components.sub_network import SubNetwork
 from typsa.components.transformer import (
     BaseTransformer,
@@ -82,9 +80,9 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
         instances.
         """
         components = (
-            self._get_components(BaseGenerator, Generator[T])
-            | self._get_components(BaseGenerator, ExtendableGenerator[T])
-            | self._get_components(BaseGenerator, CommittableGenerator[T])
+            self._get_components(Generator, Generator[T])
+            | self._get_components(ExtendableGenerator, ExtendableGenerator[T])
+            | self._get_components(CommittableGenerator, CommittableGenerator[T])
         )
         return BusTiedComponentKeyed(
             components, components, list(self.buses.all.keys())
@@ -99,8 +97,8 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
     def lines(self) -> ComponentKeyed[dict[str, Line[T] | ExtendableLine[T]]]:
         """Get all `Line` and `ExtendableLine` instances."""
         return ComponentKeyed(
-            self._get_components(BaseLine, Line[T])
-            | self._get_components(BaseLine, ExtendableLine[T])
+            self._get_components(Line, Line[T])
+            | self._get_components(ExtendableLine, ExtendableLine[T])
         )
 
     @property
@@ -109,9 +107,9 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
     ) -> ComponentKeyed[dict[str, Link[T] | ExtendableLink[T] | CommittableLink[T]]]:
         """Get all `Link`, `ExtendableLink`, and `CommittableLink` instances."""
         return ComponentKeyed(
-            self._get_components(BaseLink, Link[T])
-            | self._get_components(BaseLink, ExtendableLink[T])
-            | self._get_components(BaseLink, CommittableLink[T])
+            self._get_components(Link, Link[T])
+            | self._get_components(ExtendableLink, ExtendableLink[T])
+            | self._get_components(CommittableLink, CommittableLink[T])
         )
 
     @property
@@ -136,8 +134,8 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
     ) -> BusTiedComponentKeyed[dict[str, StorageUnit[T] | ExtendableStorageUnit[T]]]:
         """Get all `StorageUnit` and `ExtendableStorageUnit` instances."""
         components = self._get_components(
-            BaseStorageUnit, StorageUnit[T]
-        ) | self._get_components(BaseStorageUnit, ExtendableStorageUnit[T])
+            StorageUnit, StorageUnit[T]
+        ) | self._get_components(ExtendableStorageUnit, ExtendableStorageUnit[T])
         return BusTiedComponentKeyed(
             components, components, list(self.buses.all.keys())
         )
@@ -147,8 +145,8 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
         self,
     ) -> BusTiedComponentKeyed[dict[str, Store[T] | ExtendableStore[T]]]:
         """Get all `Store` and `ExtendableStore` instances."""
-        components = self._get_components(BaseStore, Store[T]) | self._get_components(
-            BaseStore, ExtendableStore[T]
+        components = self._get_components(Store, Store[T]) | self._get_components(
+            ExtendableStore, ExtendableStore[T]
         )
         return BusTiedComponentKeyed(
             components, components, list(self.buses.all.keys())
@@ -160,8 +158,8 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
     ) -> ComponentKeyed[dict[str, Transformer[T] | ExtendableTransformer[T]]]:
         """Get all `Transformer` and `ExtendableTransformer` instances."""
         return ComponentKeyed(
-            self._get_components(BaseTransformer, Transformer[T])
-            | self._get_components(BaseTransformer, ExtendableTransformer[T])
+            self._get_components(Transformer, Transformer[T])
+            | self._get_components(ExtendableTransformer, ExtendableTransformer[T])
         )
 
     @property
