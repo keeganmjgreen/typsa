@@ -8,7 +8,7 @@ import pydantic
 from linopy.constants import SolverStatus, TerminationCondition
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
-from typsa.network import BusTiedComponentKeyed, ComponentKeyed
+from typsa.components._base_component import BusTiedComponentKeyed, ComponentKeyed
 from typsa.time_variation import IntegerSnapshots, Static, TimestampSnapshots
 
 from .components._base_component import (

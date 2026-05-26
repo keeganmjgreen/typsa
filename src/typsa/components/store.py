@@ -7,8 +7,8 @@ from typing import ClassVar, Literal
 import pandas
 from pydantic import Field
 
+from typsa.components._base_component import BusTiedComponentKeyed
 from typsa.literal_types import SignType
-from typsa.network import BusTiedComponentKeyed
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import BaseDynamicResults, BusTied, ENomExtendableComponent

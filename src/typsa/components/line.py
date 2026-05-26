@@ -7,7 +7,7 @@ from typing import ClassVar, Literal
 import pandas
 from pydantic import BaseModel, Field
 
-from typsa.network import ComponentKeyed
+from typsa.components._base_component import ComponentKeyed
 from typsa.standard_types import StandardLineType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 

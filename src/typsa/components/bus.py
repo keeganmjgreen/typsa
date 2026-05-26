@@ -8,10 +8,9 @@ import pandas
 from pydantic import BaseModel, ConfigDict, Field
 
 from typsa.literal_types import ControlType
-from typsa.network import ComponentKeyed
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
-from ._base_component import BaseComponent, BaseDynamicResults
+from ._base_component import BaseComponent, BaseDynamicResults, ComponentKeyed
 
 
 class Coordinates(BaseModel):

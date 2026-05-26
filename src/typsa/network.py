@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import datetime as dt
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from typing import Any, Sequence, assert_never, cast
 
 import pandas as pd
 import pydantic
 import pypsa
 from linopy.constants import SolverStatus, TerminationCondition
-from pydantic import dataclasses
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
 from typsa.components.bus import Bus, BusControl, SlackBusControl
@@ -55,35 +54,9 @@ from typsa.time_variation import (
 
 from .components._base_component import (
     BaseComponent,
-    BusTied,
+    BusTiedComponentKeyed,
+    ComponentKeyed,
 )
-
-
-@dataclasses.dataclass
-class ComponentKeyed[T: dict[str, Any] | pd.DataFrame]:
-    all: T
-
-
-class BusTiedComponentKeyed[T: dict[str, Any] | pd.DataFrame](ComponentKeyed[T]):
-    _components_by_bus: dict[str, list[str]]
-
-    def __init__(
-        self, collection: T, components: Mapping[str, BusTied], bus_names: list[str]
-    ) -> None:
-        super().__init__(collection)
-        self._components_by_bus = {
-            bus_name: [k for k, v in components.items() if v.bus == bus_name]
-            for bus_name in bus_names
-        }
-
-    @property
-    def grouped_by_bus(self) -> dict[str, T]:
-        return {
-            bus_name: type(self.all)(
-                {cn: self.all[cn] for cn in component_names if cn in self.all}
-            )
-            for bus_name, component_names in self._components_by_bus.items()
-        }
 
 
 class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
