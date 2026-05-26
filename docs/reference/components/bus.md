@@ -14,6 +14,7 @@ Use the [`Bus`](#components.bus.Bus) class to represent a node that other types 
       show_source: false
       members:
         - Bus
+        - BusBaseDynamicResults
         - BusOptimizationStaticResults
         - BusOptimizationDynamicResults
         - BusPfDynamicResults

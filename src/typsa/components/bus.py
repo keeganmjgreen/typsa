@@ -65,17 +65,17 @@ class SlackBusControl(BusControl):
     """Name of slack generator attached to slack bus."""
 
 
-class _BusDynamicResults(BaseDynamicResults):
+class BusBaseDynamicResults(BaseDynamicResults):
     p: pandas.DataFrame
     """Active power at bus (positive if net generation at bus)."""
 
 
-class BusOptimizationDynamicResults(_BusDynamicResults):
+class BusOptimizationDynamicResults(BusBaseDynamicResults):
     marginal_price: pandas.DataFrame
     """Shadow price from energy balance constraint."""
 
 
-class BusPfDynamicResults(_BusDynamicResults):
+class BusPfDynamicResults(BusBaseDynamicResults):
     v_mag_pu: pandas.DataFrame
     """Voltage magnitude, per unit of `v_nom`."""
 
