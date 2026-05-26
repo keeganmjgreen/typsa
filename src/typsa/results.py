@@ -5,16 +5,18 @@ from typing import Literal, cast
 
 import pandas as pd
 import pydantic
-import pypsa
 from linopy.constants import SolverStatus, TerminationCondition
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
+from typsa.network import BusTiedComponentKeyed, ComponentKeyed
+from typsa.time_variation import IntegerSnapshots, Static, TimestampSnapshots
 
 from .components._base_component import (
     BaseComponent,
     BaseDynamicResults,
     BaseExtendableComponent,
     BaseStaticResults,
+    BusTied,
     Capacity,
 )
 from .components.bus import (
@@ -88,7 +90,9 @@ from .components.transformer import (
 )
 
 
-class OptimizationStaticResults(PypsaNetworkDerivative):
+class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshots](
+    PypsaNetworkDerivative[T]
+):
     @property
     def all_capacities(self) -> dict[str, Capacity]:
         """Access optimized capacities for all extendable components."""
@@ -133,36 +137,46 @@ class OptimizationStaticResults(PypsaNetworkDerivative):
         return self.of_all_global_constraints[global_constraint.name]
 
     @property
-    def of_all_lines(self) -> dict[str, LineOptimizationStaticResults]:
+    def of_all_lines(self) -> ComponentKeyed[dict[str, LineOptimizationStaticResults]]:
         """Access static optimization results for all `Line`/`ExtendableLine` instances."""
-        return self._get_static_results(BaseLine, LineOptimizationStaticResults)
+        return ComponentKeyed(
+            self._get_static_results(BaseLine, LineOptimizationStaticResults)
+        )
 
     def of_line(self, line: BaseLine) -> LineOptimizationStaticResults:
         """Access static optimization results for a `Line`/`ExtendableLine` instance."""
-        return self.of_all_lines[line.name]
+        return self.of_all_lines.all[line.name]
 
     @property
     def of_all_shunt_impedances(
         self,
-    ) -> dict[str, ShuntImpedanceOptimizationStaticResults]:
+    ) -> BusTiedComponentKeyed[dict[str, ShuntImpedanceOptimizationStaticResults]]:
         """Access static optimization results for all `ShuntImpedance` instances."""
-        return self._get_static_results(
-            ShuntImpedance, ShuntImpedanceOptimizationStaticResults
+        return BusTiedComponentKeyed(
+            self._get_static_results(
+                ShuntImpedance, ShuntImpedanceOptimizationStaticResults
+            ),
+            self._get_components(ShuntImpedance, BusTied),
+            list(self._get_components(Bus, Bus[T]).keys()),
         )
 
     def of_shunt_impedance(
         self, shunt_impedance: ShuntImpedance
     ) -> ShuntImpedanceOptimizationStaticResults:
         """Access static optimization results for a `ShuntImpedance` instance."""
-        return self.of_all_shunt_impedances[shunt_impedance.name]
+        return self.of_all_shunt_impedances.all[shunt_impedance.name]
 
     @property
-    def of_all_transformers(self) -> dict[str, TransformerOptimizationStaticResults]:
+    def of_all_transformers(
+        self,
+    ) -> ComponentKeyed[dict[str, TransformerOptimizationStaticResults]]:
         """Access static optimization results for all
         `Transformer`/`ExtendableTransformer` instances.
         """
-        return self._get_static_results(
-            BaseTransformer, TransformerOptimizationStaticResults
+        return ComponentKeyed(
+            self._get_static_results(
+                BaseTransformer, TransformerOptimizationStaticResults
+            )
         )
 
     def of_transformer(
@@ -171,14 +185,14 @@ class OptimizationStaticResults(PypsaNetworkDerivative):
         """Access static optimization results for a
         `Transformer`/`ExtendableTransformer` instance.
         """
-        return self.of_all_transformers[transformer.name]
+        return self.of_all_transformers.all[transformer.name]
 
-    def _get_static_results[T: BaseStaticResults](
+    def _get_static_results[T2: BaseStaticResults](
         self,
         component_class: type[BaseComponent],
-        static_results_class: type[T],
+        static_results_class: type[T2],
         filter: Callable[[pd.DataFrame], pd.Series] | None = None,
-    ) -> dict[str, T]:
+    ) -> dict[str, T2]:
         static_df = self._get_pypsa_network_components(component_class).static
         if filter is not None:
             static_df = static_df.loc[filter(static_df)]
@@ -187,17 +201,16 @@ class OptimizationStaticResults(PypsaNetworkDerivative):
             for name, row in static_df.iterrows()
         }
 
-    def _get_components(self, component_class: type[BaseComponent]) -> pypsa.Components:
-        return self._get_pypsa_network_components(component_class)
 
-
-class _BaseDynamicResults(PypsaNetworkDerivative):
-    def _get_dynamic_results[T: BaseDynamicResults](
+class _BaseDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots](
+    PypsaNetworkDerivative[T]
+):
+    def _get_dynamic_results[T2: BaseDynamicResults](
         self,
         component_class: type[BaseComponent],
-        dynamic_results_class: type[T],
+        dynamic_results_class: type[T2],
         filter: Callable[[pd.DataFrame], pd.Series] | None = None,
-    ) -> T:
+    ) -> T2:
         static_df = self._get_pypsa_network_components(component_class).static
         dynamic_dfs = cast(
             dict[str, pd.DataFrame],
@@ -212,10 +225,22 @@ class _BaseDynamicResults(PypsaNetworkDerivative):
                 ]
                 for field_name in dynamic_results_class.model_fields
             }
-        return dynamic_results_class.model_validate(dynamic_dfs)
+        fields = {
+            field_name: BusTiedComponentKeyed(
+                df,
+                self._get_components(component_class, BusTied),
+                list(self._get_components(Bus, Bus[T]).keys()),
+            )
+            if issubclass(component_class, BusTied)
+            else ComponentKeyed(df)
+            for field_name, df in dynamic_dfs.items()
+        }
+        return dynamic_results_class.model_validate(fields)
 
 
-class OptimizationDynamicResults(_BaseDynamicResults):
+class OptimizationDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots](
+    _BaseDynamicResults[T]
+):
     @property
     def of_all_buses(self) -> BusOptimizationDynamicResults:
         """Access dynamic optimization results for all `Bus` instances."""
@@ -228,7 +253,8 @@ class OptimizationDynamicResults(_BaseDynamicResults):
         `Generator`/`ExtendableGenerator` instances.
         """
         return self._get_dynamic_results(
-            BaseGenerator, GeneratorOptimizationDynamicResults
+            BaseGenerator,
+            GeneratorOptimizationDynamicResults,
         )
 
     @property
@@ -332,7 +358,9 @@ class OptimizationInfo(pydantic.BaseModel):
     objective_constant: float
 
 
-class LinearPowerFlowDynamicResults(_BaseDynamicResults):
+class LinearPowerFlowDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots](
+    _BaseDynamicResults[T]
+):
     @property
     def of_all_buses(self) -> BusPfDynamicResults:
         """Access dynamic LPF results for all `Bus` instances."""
@@ -387,7 +415,9 @@ class LinearPowerFlowDynamicResults(_BaseDynamicResults):
         return self._get_dynamic_results(BaseTransformer, TransformerPfDynamicResults)
 
 
-class NonlinearPowerFlowDynamicResults(_BaseDynamicResults):
+class NonlinearPowerFlowDynamicResults[
+    T: Static | TimestampSnapshots | IntegerSnapshots
+](_BaseDynamicResults[T]):
     @property
     def of_all_buses(self) -> BusNonlinearPfDynamicResults:
         """Access dynamic PF results for all `Bus` instances."""

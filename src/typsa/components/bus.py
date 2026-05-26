@@ -8,6 +8,7 @@ import pandas
 from pydantic import BaseModel, ConfigDict, Field
 
 from typsa.literal_types import ControlType
+from typsa.network import ComponentKeyed
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import BaseComponent, BaseDynamicResults
@@ -63,23 +64,23 @@ class SlackBusControl(BusControl):
 
 
 class BusBaseDynamicResults(BaseDynamicResults):
-    p: pandas.DataFrame
+    p: ComponentKeyed[pandas.DataFrame]
     """Active power at bus (positive if net generation at bus)."""
 
 
 class BusOptimizationDynamicResults(BusBaseDynamicResults):
-    marginal_price: pandas.DataFrame
+    marginal_price: ComponentKeyed[pandas.DataFrame]
     """Shadow price from energy balance constraint."""
 
 
 class BusPfDynamicResults(BusBaseDynamicResults):
-    v_mag_pu: pandas.DataFrame
+    v_mag_pu: ComponentKeyed[pandas.DataFrame]
     """Voltage magnitude, per unit of `v_nom`."""
 
-    v_ang: pandas.DataFrame
+    v_ang: ComponentKeyed[pandas.DataFrame]
     """Voltage angle."""
 
 
 class BusNonlinearPfDynamicResults(BusPfDynamicResults):
-    q: pandas.DataFrame
+    q: ComponentKeyed[pandas.DataFrame]
     """Reactive power (positive if net generation at bus)."""

@@ -7,6 +7,7 @@ from typing import ClassVar, Literal
 import pandas
 from pydantic import BaseModel, Field
 
+from typsa.network import ComponentKeyed
 from typsa.standard_types import StandardLineType
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
@@ -132,18 +133,18 @@ class LineOptimizationStaticResults(BaseStaticResults):
 
 
 class LineBaseDynamicResults(BaseDynamicResults):
-    p0: pandas.DataFrame
+    p0: ComponentKeyed[pandas.DataFrame]
     """Active power at `bus0` (positive if branch is withdrawing power from `bus0`)."""
 
-    p1: pandas.DataFrame
+    p1: ComponentKeyed[pandas.DataFrame]
     """Active power at `bus1` (positive if branch is withdrawing power from `bus1`)."""
 
 
 class LineOptimizationDynamicResults(LineBaseDynamicResults):
-    mu_lower: pandas.DataFrame
+    mu_lower: ComponentKeyed[pandas.DataFrame]
     """Shadow price of lower `s_nom` limit $-F \\leq f$. Always non-negative."""
 
-    mu_upper: pandas.DataFrame
+    mu_upper: ComponentKeyed[pandas.DataFrame]
     """Shadow price of upper `s_nom` limit $f \\leq F$. Always non-negative."""
 
 
@@ -152,8 +153,8 @@ class LinePfDynamicResults(LineBaseDynamicResults):
 
 
 class LineNonlinearPfDynamicResults(LinePfDynamicResults):
-    q0: pandas.DataFrame
+    q0: ComponentKeyed[pandas.DataFrame]
     """Reactive power at `bus0` (positive if branch is withdrawing power from `bus0`)."""
 
-    q1: pandas.DataFrame
+    q1: ComponentKeyed[pandas.DataFrame]
     """Reactive power at `bus1` (positive if branch is withdrawing power from `bus1`)."""

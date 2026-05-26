@@ -8,6 +8,7 @@ import pandas
 from pydantic import Field
 
 from typsa.literal_types import SignType
+from typsa.network import BusTiedComponentKeyed
 from typsa.time_variation import Static
 
 from ._base_component import (
@@ -48,7 +49,7 @@ class ShuntImpedanceOptimizationStaticResults(BaseStaticResults):
 
 
 class ShuntImpedanceBaseDynamicResults(BaseDynamicResults):
-    p: pandas.DataFrame
+    p: BusTiedComponentKeyed[pandas.DataFrame]
     """Active power at bus (positive if net load)."""
 
 
@@ -61,5 +62,5 @@ class ShuntImpedancePfDynamicResults(ShuntImpedanceBaseDynamicResults):
 
 
 class ShuntImpedanceNonlinearPfDynamicResults(ShuntImpedancePfDynamicResults):
-    q: pandas.DataFrame
+    q: BusTiedComponentKeyed[pandas.DataFrame]
     """Reactive power (positive if net generation)."""

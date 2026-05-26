@@ -7,6 +7,7 @@ from typing import ClassVar, Literal
 import pandas
 from pydantic import BaseModel, Field
 
+from typsa.network import ComponentKeyed
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import BaseDynamicResults, PNomExtendableComponent
@@ -153,38 +154,38 @@ class CommittableLink[T: Static | TimestampSnapshots | IntegerSnapshots = Static
 
 
 class LinkBaseDynamicResults(BaseDynamicResults):
-    p0: pandas.DataFrame
+    p0: ComponentKeyed[pandas.DataFrame]
     """Power at `bus0` (positive if link is withdrawing from `bus0`)."""
 
-    p1: pandas.DataFrame
+    p1: ComponentKeyed[pandas.DataFrame]
     """Power at `bus1` (positive if link is withdrawing from `bus1`)."""
 
 
 class LinkOptimizationDynamicResults(LinkBaseDynamicResults):
-    mu_lower: pandas.DataFrame
+    mu_lower: ComponentKeyed[pandas.DataFrame]
     """Shadow price of lower `p_nom` limit  $-F \\leq f$. Always non-negative."""
 
-    mu_upper: pandas.DataFrame
+    mu_upper: ComponentKeyed[pandas.DataFrame]
     """Shadow price of upper `p_nom` limit $f \\leq F$. Always non-negative."""
 
-    mu_p_set: pandas.DataFrame
+    mu_p_set: ComponentKeyed[pandas.DataFrame]
     """Shadow price of fixed dispatch `p_set`."""
 
-    mu_ramp_limit_up: pandas.DataFrame
+    mu_ramp_limit_up: ComponentKeyed[pandas.DataFrame]
     """Shadow price of upper ramp up limit."""
 
-    mu_ramp_limit_down: pandas.DataFrame
+    mu_ramp_limit_down: ComponentKeyed[pandas.DataFrame]
     """Shadow price of lower ramp down limit."""
 
 
 class CommittableLinkOptimizationDynamicResults(LinkOptimizationDynamicResults):
-    status: pandas.DataFrame
+    status: ComponentKeyed[pandas.DataFrame]
     """Status in the snapshot (1 is on, 0 is off)."""
 
-    start_up: pandas.DataFrame
+    start_up: ComponentKeyed[pandas.DataFrame]
     """Whether the unit was started in the snapshot (1 is yes, 0 is no)."""
 
-    shut_down: pandas.DataFrame
+    shut_down: ComponentKeyed[pandas.DataFrame]
     """Whether the unit was shut down in the snapshot (1 is yes, 0 is no)."""
 
 

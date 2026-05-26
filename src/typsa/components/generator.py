@@ -8,6 +8,7 @@ import pandas
 from pydantic import Field
 
 from typsa.literal_types import ControlType, SignType
+from typsa.network import BusTiedComponentKeyed
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import BaseDynamicResults, BusTied, PNomExtendableComponent
@@ -152,37 +153,37 @@ class CommittableGenerator[T: Static | TimestampSnapshots | IntegerSnapshots = S
 
 
 class GeneratorBaseDynamicResults(BaseDynamicResults):
-    p: pandas.DataFrame
+    p: BusTiedComponentKeyed[pandas.DataFrame]
     """Active power at bus (positive if net generation)."""
 
 
 class GeneratorOptimizationDynamicResults(GeneratorBaseDynamicResults):
-    mu_upper: pandas.DataFrame
+    mu_upper: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of upper `p_nom` limit."""
 
-    mu_lower: pandas.DataFrame
+    mu_lower: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of lower `p_nom` limit."""
 
-    mu_p_set: pandas.DataFrame
+    mu_p_set: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of fixed power generation `p_set`."""
 
-    mu_ramp_limit_up: pandas.DataFrame
+    mu_ramp_limit_up: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of upper ramp up limit."""
 
-    mu_ramp_limit_down: pandas.DataFrame
+    mu_ramp_limit_down: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of lower ramp down limit."""
 
 
 class CommittableGeneratorOptimizationDynamicResults(
     GeneratorOptimizationDynamicResults
 ):
-    status: pandas.DataFrame
+    status: BusTiedComponentKeyed[pandas.DataFrame]
     """Status in the snapshot (1 is on, 0 is off)."""
 
-    start_up: pandas.DataFrame
+    start_up: BusTiedComponentKeyed[pandas.DataFrame]
     """Whether the unit was started in the snapshot (1 is yes, 0 is no)."""
 
-    shut_down: pandas.DataFrame
+    shut_down: BusTiedComponentKeyed[pandas.DataFrame]
     """Whether the unit was shut down in the snapshot (1 is yes, 0 is no)."""
 
 
@@ -191,5 +192,5 @@ class GeneratorPfDynamicResults(GeneratorBaseDynamicResults):
 
 
 class GeneratorNonlinearPfDynamicResults(GeneratorPfDynamicResults):
-    q: pandas.DataFrame
+    q: BusTiedComponentKeyed[pandas.DataFrame]
     """Reactive power (positive if net generation)."""

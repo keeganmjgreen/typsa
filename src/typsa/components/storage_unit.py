@@ -8,6 +8,7 @@ import pandas
 from pydantic import Field
 
 from typsa.literal_types import ControlType, SignType
+from typsa.network import BusTiedComponentKeyed
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import BaseDynamicResults, BusTied, PNomExtendableComponent
@@ -136,33 +137,33 @@ class ExtendableStorageUnit[T: Static | TimestampSnapshots | IntegerSnapshots = 
 
 
 class StorageUnitBaseDynamicResults(BaseDynamicResults):
-    p: pandas.DataFrame
+    p: BusTiedComponentKeyed[pandas.DataFrame]
     """Active power at bus (positive if net generation)."""
 
 
 class StorageUnitOptimizationDynamicResults(StorageUnitBaseDynamicResults):
-    p_dispatch: pandas.DataFrame
+    p_dispatch: BusTiedComponentKeyed[pandas.DataFrame]
     """Active power dispatch at bus."""
 
-    p_store: pandas.DataFrame
+    p_store: BusTiedComponentKeyed[pandas.DataFrame]
     """Active power charging at bus."""
 
-    state_of_charge: pandas.DataFrame
+    state_of_charge: BusTiedComponentKeyed[pandas.DataFrame]
     """State of charge as calculated by the optimisation."""
 
-    spill: pandas.DataFrame
+    spill: BusTiedComponentKeyed[pandas.DataFrame]
     """Spillage for each snapshot (e.g. hydro-dam letting water flow over the spillway without generating electricity)."""
 
-    mu_upper: pandas.DataFrame
+    mu_upper: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of upper p_nom limit."""
 
-    mu_lower: pandas.DataFrame
+    mu_lower: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of lower p_nom limit."""
 
-    mu_state_of_charge_set: pandas.DataFrame
+    mu_state_of_charge_set: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of fixed state of charge state_of_charge_set."""
 
-    mu_energy_balance: pandas.DataFrame
+    mu_energy_balance: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of storage consistency equations."""
 
 
@@ -171,5 +172,5 @@ class StorageUnitPfDynamicResults(StorageUnitBaseDynamicResults):
 
 
 class StorageUnitNonlinearPfDynamicResults(StorageUnitPfDynamicResults):
-    q: pandas.DataFrame
+    q: BusTiedComponentKeyed[pandas.DataFrame]
     """Reactive power (positive if net generation)."""

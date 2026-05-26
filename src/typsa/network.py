@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
-import math
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, Sequence, assert_never, cast
 
 import pandas as pd
@@ -12,7 +11,7 @@ from linopy.constants import SolverStatus, TerminationCondition
 from pydantic import dataclasses
 
 from typsa._pypsa_network_derivative import PypsaNetworkDerivative
-from typsa.components.bus import Bus, BusControl, Coordinates, SlackBusControl
+from typsa.components.bus import Bus, BusControl, SlackBusControl
 from typsa.components.carrier import Carrier
 from typsa.components.generator import (
     BaseGenerator,
@@ -56,82 +55,77 @@ from typsa.time_variation import (
 
 from .components._base_component import (
     BaseComponent,
-    BaseExtendableComponent,
     BusTied,
 )
 
 
-class _HasSnapshotsClass[T: Static | TimestampSnapshots | IntegerSnapshots]:
-    _snapshots_class: type[T]
-
-
 @dataclasses.dataclass
-class ComponentCollection[T]:
-    _components: dict[str, T]
+class ComponentKeyed[T: dict[str, Any] | pd.DataFrame]:
+    all: T
+
+
+class BusTiedComponentKeyed[T: dict[str, Any] | pd.DataFrame](ComponentKeyed[T]):
+    _components_by_bus: dict[str, list[str]]
+
+    def __init__(
+        self, collection: T, components: Mapping[str, BusTied], bus_names: list[str]
+    ) -> None:
+        super().__init__(collection)
+        self._components_by_bus = {
+            bus_name: [k for k, v in components.items() if v.bus == bus_name]
+            for bus_name in bus_names
+        }
 
     @property
-    def as_dict(self) -> dict[str, T]:
-        return self._components
-
-
-@dataclasses.dataclass
-class BusTiedComponentCollection[T: BusTied](ComponentCollection[T]):
-    _bus_names: list[str]
-
-    @property
-    def grouped_by_bus(self) -> dict[str, dict[str, T]]:
+    def grouped_by_bus(self) -> dict[str, T]:
         return {
-            bus_name: {k: v for k, v in self._components.items() if v.bus == bus_name}
-            for bus_name in self._bus_names
+            bus_name: type(self.all)(
+                {cn: self.all[cn] for cn in component_names if cn in self.all}
+            )
+            for bus_name, component_names in self._components_by_bus.items()
         }
 
 
 class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
-    PypsaNetworkDerivative, _HasSnapshotsClass[T]
+    PypsaNetworkDerivative[T]
 ):
-    def __init__(self, pypsa_network: pypsa.Network, snapshots_class: type[T]) -> None:
-        super().__init__(pypsa_network)
-        self._snapshots_class = snapshots_class
-
     @property
-    def buses(self) -> ComponentCollection[Bus[T]]:
+    def buses(self) -> ComponentKeyed[dict[str, Bus[T]]]:
         """Get all `Bus` instances."""
-        return ComponentCollection(self._get_components(Bus, Bus[T]))
+        return ComponentKeyed(self._get_components(Bus, Bus[T]))
 
     @property
-    def carriers(self) -> ComponentCollection[Carrier]:
+    def carriers(self) -> ComponentKeyed[dict[str, Carrier]]:
         """Get all `Carrier` instances."""
-        return ComponentCollection(self._get_components(Carrier, Carrier))
+        return ComponentKeyed(self._get_components(Carrier, Carrier))
 
     @property
     def generators(
         self,
-    ) -> BusTiedComponentCollection[
-        Generator[T] | ExtendableGenerator[T] | CommittableGenerator[T]
+    ) -> BusTiedComponentKeyed[
+        dict[str, Generator[T] | ExtendableGenerator[T] | CommittableGenerator[T]]
     ]:
         """Get all `Generator`, `ExtendableGenerator`, and `CommittableGenerator`
         instances.
         """
-        return BusTiedComponentCollection(
-            (
-                self._get_components(BaseGenerator, Generator[T])
-                | self._get_components(BaseGenerator, ExtendableGenerator[T])
-                | self._get_components(BaseGenerator, CommittableGenerator[T])
-            ),
-            list(self.buses.as_dict.keys()),
+        components = (
+            self._get_components(BaseGenerator, Generator[T])
+            | self._get_components(BaseGenerator, ExtendableGenerator[T])
+            | self._get_components(BaseGenerator, CommittableGenerator[T])
+        )
+        return BusTiedComponentKeyed(
+            components, components, list(self.buses.all.keys())
         )
 
     @property
-    def global_constraints(self) -> ComponentCollection[GlobalConstraint]:
+    def global_constraints(self) -> ComponentKeyed[dict[str, GlobalConstraint]]:
         """Get all `GlobalConstraint` instances."""
-        return ComponentCollection(
-            self._get_components(GlobalConstraint, GlobalConstraint)
-        )
+        return ComponentKeyed(self._get_components(GlobalConstraint, GlobalConstraint))
 
     @property
-    def lines(self) -> ComponentCollection[Line[T] | ExtendableLine[T]]:
+    def lines(self) -> ComponentKeyed[dict[str, Line[T] | ExtendableLine[T]]]:
         """Get all `Line` and `ExtendableLine` instances."""
-        return ComponentCollection(
+        return ComponentKeyed(
             self._get_components(BaseLine, Line[T])
             | self._get_components(BaseLine, ExtendableLine[T])
         )
@@ -139,132 +133,63 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
     @property
     def links(
         self,
-    ) -> ComponentCollection[Link[T] | ExtendableLink[T] | CommittableLink[T]]:
+    ) -> ComponentKeyed[dict[str, Link[T] | ExtendableLink[T] | CommittableLink[T]]]:
         """Get all `Link`, `ExtendableLink`, and `CommittableLink` instances."""
-        return ComponentCollection(
+        return ComponentKeyed(
             self._get_components(BaseLink, Link[T])
             | self._get_components(BaseLink, ExtendableLink[T])
             | self._get_components(BaseLink, CommittableLink[T])
         )
 
     @property
-    def loads(self) -> BusTiedComponentCollection[Load[T]]:
+    def loads(self) -> BusTiedComponentKeyed[dict[str, Load[T]]]:
         """Get all `Load` instances."""
-        return BusTiedComponentCollection(
-            self._get_components(Load, Load[T]), list(self.buses.as_dict.keys())
+        components = self._get_components(Load, Load[T])
+        return BusTiedComponentKeyed(
+            components, components, list(self.buses.all.keys())
         )
 
     @property
-    def shunt_impedances(self) -> BusTiedComponentCollection[ShuntImpedance]:
+    def shunt_impedances(self) -> BusTiedComponentKeyed[dict[str, ShuntImpedance]]:
         """Get all `ShuntImpedance` instances."""
-        return BusTiedComponentCollection(
-            self._get_components(ShuntImpedance, ShuntImpedance),
-            list(self.buses.as_dict.keys()),
+        components = self._get_components(ShuntImpedance, ShuntImpedance)
+        return BusTiedComponentKeyed(
+            components, components, list(self.buses.all.keys())
         )
 
     @property
     def storage_units(
         self,
-    ) -> BusTiedComponentCollection[StorageUnit[T] | ExtendableStorageUnit[T]]:
+    ) -> BusTiedComponentKeyed[dict[str, StorageUnit[T] | ExtendableStorageUnit[T]]]:
         """Get all `StorageUnit` and `ExtendableStorageUnit` instances."""
-        return BusTiedComponentCollection(
-            self._get_components(BaseStorageUnit, StorageUnit[T])
-            | self._get_components(BaseStorageUnit, ExtendableStorageUnit[T]),
-            list(self.buses.as_dict.keys()),
+        components = self._get_components(
+            BaseStorageUnit, StorageUnit[T]
+        ) | self._get_components(BaseStorageUnit, ExtendableStorageUnit[T])
+        return BusTiedComponentKeyed(
+            components, components, list(self.buses.all.keys())
         )
 
     @property
-    def stores(self) -> BusTiedComponentCollection[Store[T] | ExtendableStore[T]]:
+    def stores(
+        self,
+    ) -> BusTiedComponentKeyed[dict[str, Store[T] | ExtendableStore[T]]]:
         """Get all `Store` and `ExtendableStore` instances."""
-        return BusTiedComponentCollection(
-            self._get_components(BaseStore, Store[T])
-            | self._get_components(BaseStore, ExtendableStore[T]),
-            list(self.buses.as_dict.keys()),
+        components = self._get_components(BaseStore, Store[T]) | self._get_components(
+            BaseStore, ExtendableStore[T]
+        )
+        return BusTiedComponentKeyed(
+            components, components, list(self.buses.all.keys())
         )
 
     @property
     def transformers(
         self,
-    ) -> ComponentCollection[Transformer[T] | ExtendableTransformer[T]]:
+    ) -> ComponentKeyed[dict[str, Transformer[T] | ExtendableTransformer[T]]]:
         """Get all `Transformer` and `ExtendableTransformer` instances."""
-        return ComponentCollection(
+        return ComponentKeyed(
             self._get_components(BaseTransformer, Transformer[T])
             | self._get_components(BaseTransformer, ExtendableTransformer[T])
         )
-
-    def _get_components[T2](
-        self, base_class: type[BaseComponent], type: type[T2]
-    ) -> dict[str, T2]:
-        static_df = self._get_pypsa_network_components(base_class).static
-        if issubclass(base_class, BaseExtendableComponent):
-            field_name = f"{base_class.EXTENDABLE_COLUMN_PREFIX}_extendable"
-            static_df = cast(
-                pd.DataFrame,
-                static_df.loc[
-                    static_df[field_name] == base_class.model_fields[field_name].default
-                ],
-            )
-        committable = "committable"
-        if committable in static_df.columns:
-            static_df = cast(
-                pd.DataFrame,
-                static_df.loc[
-                    static_df[committable]
-                    == base_class.model_fields[committable].default
-                ],
-            )
-        component_dicts = {
-            cast(str, name): dict(row) for name, row in static_df.iterrows()
-        }
-        dynamic_dfs = cast(
-            dict[str, pd.DataFrame],
-            self._get_pypsa_network_components(base_class).dynamic,
-        )
-        if issubclass(self._snapshots_class, Static):
-            series_class = None
-        elif issubclass(self._snapshots_class, TimestampSnapshots):
-            series_class = TimestampedSeries
-        else:
-            assert issubclass(self._snapshots_class, IntegerSnapshots)
-            series_class = RangedSeries
-        for component_name in component_dicts.keys():
-            component_dicts[component_name] = {
-                k: (None if isinstance(v, str) and len(v) == 0 else v)
-                for k, v in component_dicts[component_name].items()
-                if not isinstance(v, float) or math.isfinite(v)
-            }
-            if (
-                issubclass(base_class, Bus)
-                and "x" in component_dicts[component_name]
-                and "y" in component_dicts[component_name]
-            ):
-                component_dicts[component_name]["coordinates"] = Coordinates(
-                    x=component_dicts[component_name].pop("x"),
-                    y=component_dicts[component_name].pop("y"),
-                )
-            if "parameters" in base_class.model_fields:
-                parameters_dict = {
-                    k: component_dicts[component_name].pop(k)
-                    for k in list(component_dicts[component_name].keys())
-                    if k not in base_class.model_fields
-                }
-                component_dicts[component_name]["parameters"] = parameters_dict
-            component_dicts[component_name]["name"] = component_name
-            if series_class is not None:
-                component_dicts[component_name].update(
-                    {
-                        field_name: series_class(dynamic_df[component_name])
-                        for field_name, dynamic_df in dynamic_dfs.items()
-                        if component_name in dynamic_df.columns
-                        and any(dynamic_df[component_name].notna())
-                    }
-                )
-        return {
-            component_name: pydantic.TypeAdapter(type).validate_python(
-                component_dict, extra="ignore"
-            )
-            for component_name, component_dict in component_dicts.items()
-        }
 
     @property
     def plot(self) -> pypsa.plot.PlotAccessor:
@@ -277,7 +202,9 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
         return self._pypsa_network.statistics
 
 
-class _SubNetworksAccessible(PypsaNetworkDerivative):
+class _SubNetworksAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
+    PypsaNetworkDerivative[T]
+):
     @property
     def sub_networks(self) -> list[SubNetwork]:
         static_df = self._get_pypsa_network_components(SubNetwork).static
@@ -348,7 +275,7 @@ class _SubNetworksAccessible(PypsaNetworkDerivative):
 
 
 class _Optimizable[T: Static | TimestampSnapshots | IntegerSnapshots](
-    PypsaNetworkDerivative, _HasSnapshotsClass[T]
+    PypsaNetworkDerivative[T]
 ):
     def optimize(
         self,
@@ -502,13 +429,13 @@ class _Optimizable[T: Static | TimestampSnapshots | IntegerSnapshots](
 
 
 class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
-    PypsaNetworkDerivative
+    _ComponentsAccessible[T]
 ):
     def lpf(
         self,
         snapshots: T | None = None,
         skip_pre: bool = False,
-    ) -> tuple[LinearPowerFlowDynamicResults, PowerFlowInfo]:
+    ) -> tuple[LinearPowerFlowDynamicResults[T], PowerFlowInfo]:
         """Run linearized power flow on the optimized network."""
         pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.optimize.fix_optimal_capacities()
@@ -521,7 +448,9 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
             ),
             skip_pre=skip_pre,
         )
-        lpf_dynamic_results = LinearPowerFlowDynamicResults(pypsa_network_copy)
+        lpf_dynamic_results = LinearPowerFlowDynamicResults[T](
+            self._pypsa_network, self._snapshots_class
+        )
         pf_info = PowerFlowInfo.model_validate(info)
         return lpf_dynamic_results, pf_info
 
@@ -533,7 +462,7 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
         use_seed: bool = False,
         distribute_slack: bool = False,
         slack_weights: str = "p_set",
-    ) -> tuple[NonlinearPowerFlowDynamicResults, PowerFlowInfo]:
+    ) -> tuple[NonlinearPowerFlowDynamicResults[T], PowerFlowInfo]:
         """Run nonlinear power flow on the optimized network."""
         pypsa_network_copy = self._copy_pypsa_network()
         pypsa_network_copy.optimize.fix_optimal_capacities()
@@ -550,7 +479,9 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
             distribute_slack=distribute_slack,
             slack_weights=slack_weights,
         )
-        pf_dynamic_results = NonlinearPowerFlowDynamicResults(pypsa_network_copy)
+        pf_dynamic_results = NonlinearPowerFlowDynamicResults[T](
+            self._pypsa_network, self._snapshots_class
+        )
         pf_info = PowerFlowInfo.model_validate(info)
         return pf_dynamic_results, pf_info
 
@@ -588,7 +519,7 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
 
 
 class Network[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    _ComponentsAccessible[T], _Optimizable[T], _Simulatable[T]
+    _Optimizable[T], _Simulatable[T]
 ):
     def __init__(self, snapshots: T = Static()) -> None:
         """Create a `typsa.Network` with the given snapshots."""
@@ -703,20 +634,20 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
 
 class TopologyDeterminedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots](
-    _ComponentsAccessible[T], _Optimizable[T], _Simulatable[T], _SubNetworksAccessible
+    _Optimizable[T], _Simulatable[T], _SubNetworksAccessible[T]
 ):
     pass
 
 
 class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    _ComponentsAccessible[T], _Simulatable[T], _SubNetworksAccessible
+    _Simulatable[T], _SubNetworksAccessible[T]
 ):
     @property
-    def static_results(self) -> OptimizationStaticResults:
+    def static_results(self) -> OptimizationStaticResults[T]:
         """Access static optimization results."""
-        return OptimizationStaticResults(self._pypsa_network)
+        return OptimizationStaticResults(self._pypsa_network, self._snapshots_class)
 
     @property
-    def dynamic_results(self) -> OptimizationDynamicResults:
+    def dynamic_results(self) -> OptimizationDynamicResults[T]:
         """Access dynamic optimization results."""
-        return OptimizationDynamicResults(self._pypsa_network)
+        return OptimizationDynamicResults(self._pypsa_network, self._snapshots_class)

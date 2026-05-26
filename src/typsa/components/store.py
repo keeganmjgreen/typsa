@@ -8,6 +8,7 @@ import pandas
 from pydantic import Field
 
 from typsa.literal_types import SignType
+from typsa.network import BusTiedComponentKeyed
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import BaseDynamicResults, BusTied, ENomExtendableComponent
@@ -110,21 +111,21 @@ class ExtendableStore[T: Static | TimestampSnapshots | IntegerSnapshots = Static
 
 
 class StoreBaseDynamicResults(BaseDynamicResults):
-    p: pandas.DataFrame
+    p: BusTiedComponentKeyed[pandas.DataFrame]
     """Power at bus (positive if net supply)."""
 
 
 class StoreOptimizationDynamicResults(StoreBaseDynamicResults):
-    e: pandas.DataFrame
+    e: BusTiedComponentKeyed[pandas.DataFrame]
     """Energy level of store as calculated by the optimisation."""
 
-    mu_upper: pandas.DataFrame
+    mu_upper: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of upper `e_nom` limit."""
 
-    mu_lower: pandas.DataFrame
+    mu_lower: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of lower `e_nom` limit."""
 
-    mu_energy_balance: pandas.DataFrame
+    mu_energy_balance: BusTiedComponentKeyed[pandas.DataFrame]
     """Shadow price of storage consistency equations (i.e. water values)."""
 
 
@@ -133,5 +134,5 @@ class StorePfDynamicResults(StoreBaseDynamicResults):
 
 
 class StoreNonlinearPfDynamicResults(StorePfDynamicResults):
-    q: pandas.DataFrame
+    q: BusTiedComponentKeyed[pandas.DataFrame]
     """Reactive power (positive if net supply)."""

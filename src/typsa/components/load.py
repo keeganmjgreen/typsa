@@ -8,6 +8,7 @@ import pandas
 from pydantic import Field
 
 from typsa.literal_types import SignType
+from typsa.network import BusTiedComponentKeyed
 from typsa.time_variation import IntegerSnapshots, Series, Static, TimestampSnapshots
 
 from ._base_component import BaseComponent, BaseDynamicResults, BusTied
@@ -40,7 +41,7 @@ class Load[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
 
 class LoadBaseDynamicResults(BaseDynamicResults):
-    p: pandas.DataFrame
+    p: BusTiedComponentKeyed[pandas.DataFrame]
     """Active power at bus (positive if net load)."""
 
 
@@ -53,5 +54,5 @@ class LoadPfDynamicResults(LoadBaseDynamicResults):
 
 
 class LoadNonlinearPfDynamicResults(LoadPfDynamicResults):
-    q: pandas.DataFrame
+    q: BusTiedComponentKeyed[pandas.DataFrame]
     """Reactive power (positive if net load)."""
