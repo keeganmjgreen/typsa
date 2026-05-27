@@ -32,7 +32,7 @@ class Bus[T: Static | TimestampSnapshots | IntegerSnapshots = Static](BaseCompon
     v_nom: float | None = None
     """Nominal voltage."""
 
-    coordinates: Coordinates | None = None
+    coordinates: Coordinates = Field(default_factory=Coordinates)
     """Coordinates. The Spatial Reference System Identifier (SRID) can be set in `n.srid`."""
 
     carrier: str = Field(default="AC", min_length=1)
