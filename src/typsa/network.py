@@ -64,6 +64,20 @@ from .components._base_component import (
 )
 
 
+class _AccessorsMixin[T: Static | TimestampSnapshots | IntegerSnapshots](
+    PypsaNetworkDerivative[T]
+):
+    @property
+    def plot(self) -> pypsa.plot.PlotAccessor:
+        """Access plotting functionality."""
+        return self._pypsa_network.plot
+
+    @property
+    def statistics(self) -> pypsa.statistics.StatisticsAccessor:
+        """Access statistics functionality."""
+        return self._pypsa_network.statistics
+
+
 class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
     PypsaNetworkDerivative[T]
 ):
@@ -168,16 +182,6 @@ class _ComponentsAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
             self._get_components(Transformer, Transformer[T])
             | self._get_components(ExtendableTransformer, ExtendableTransformer[T])
         )
-
-    @property
-    def plot(self) -> pypsa.plot.PlotAccessor:
-        """Access plotting functionality."""
-        return self._pypsa_network.plot
-
-    @property
-    def statistics(self) -> pypsa.statistics.StatisticsAccessor:
-        """Access statistics functionality."""
-        return self._pypsa_network.statistics
 
 
 class _SubNetworksAccessible[T: Static | TimestampSnapshots | IntegerSnapshots](
@@ -497,7 +501,7 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
 
 
 class Network[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    _Optimizable[T], _Simulatable[T]
+    _AccessorsMixin[T], _Optimizable[T], _Simulatable[T]
 ):
     def __init__(self, snapshots: T = Static()) -> None:
         """Create a `typsa.Network` with the given snapshots."""
@@ -612,13 +616,13 @@ class Network[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
 
 
 class TopologyDeterminedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots](
-    _Optimizable[T], _Simulatable[T], _SubNetworksAccessible[T]
+    _AccessorsMixin[T], _Optimizable[T], _Simulatable[T], _SubNetworksAccessible[T]
 ):
     pass
 
 
 class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
-    _Simulatable[T], _SubNetworksAccessible[T]
+    _AccessorsMixin[T], _Simulatable[T], _SubNetworksAccessible[T]
 ):
     @property
     def all_capacities(self) -> Capacities:
