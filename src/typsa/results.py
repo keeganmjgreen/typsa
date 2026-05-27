@@ -113,35 +113,23 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
         """Access optimized capacities for extendable components."""
         bus_names = list(self._components_access.buses.all.keys())
         return Capacities(
-            generators=BusTiedComponentKeyed(
-                self._get_component_capacities(ExtendableGenerator, PNomOpt),
-                self._components_access.generators.all,
-                bus_names,
+            generators=self._get_bus_tied_component_capacities(
+                ExtendableGenerator, PNomOpt, bus_names
             ),
-            lines=ComponentKeyed(
-                self._get_component_capacities(ExtendableLine, SNomOpt)
+            lines=self._get_component_capacities(ExtendableLine, SNomOpt),
+            links=self._get_component_capacities(ExtendableLink, PNomOpt),
+            storage_units=self._get_bus_tied_component_capacities(
+                ExtendableStorageUnit, PNomOpt, bus_names
             ),
-            links=ComponentKeyed(
-                self._get_component_capacities(ExtendableLink, PNomOpt)
+            stores=self._get_bus_tied_component_capacities(
+                ExtendableStore, ENomOpt, bus_names
             ),
-            storage_units=BusTiedComponentKeyed(
-                self._get_component_capacities(ExtendableStorageUnit, PNomOpt),
-                self._components_access.storage_units.all,
-                bus_names,
-            ),
-            stores=BusTiedComponentKeyed(
-                self._get_component_capacities(ExtendableStore, ENomOpt),
-                self._components_access.stores.all,
-                bus_names,
-            ),
-            transformers=ComponentKeyed(
-                self._get_component_capacities(ExtendableTransformer, SNomOpt)
-            ),
+            transformers=self._get_component_capacities(ExtendableTransformer, SNomOpt),
         )
 
     def _get_component_capacities[T2: Capacity](
         self, component_class: type[BaseExtendableComponent], capacity_class: type[T2]
-    ) -> dict[str, T2]:
+    ) -> ComponentKeyed[dict[str, T2]]:
         static_df = self._components_access._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
             component_class
         ).static
@@ -149,10 +137,24 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
             static_df[f"{component_class.EXTENDABLE_COLUMN_PREFIX}_extendable"],
             f"{component_class.EXTENDABLE_COLUMN_PREFIX}_opt",
         ].to_dict()
-        return {
-            cast(str, component_name): capacity_class(value=capacity_value)
-            for component_name, capacity_value in capacities.items()
-        }
+        return ComponentKeyed(
+            {
+                cast(str, component_name): capacity_class(value=capacity_value)
+                for component_name, capacity_value in capacities.items()
+            }
+        )
+
+    def _get_bus_tied_component_capacities[T2: Capacity](
+        self,
+        component_class: type[BaseExtendableComponent],
+        capacity_class: type[T2],
+        bus_names: list[str],
+    ) -> BusTiedComponentKeyed[dict[str, T2]]:
+        return BusTiedComponentKeyed(
+            self._get_component_capacities(component_class, capacity_class).all,
+            self._components_access._get_components(component_class, BusTied),  # pyright: ignore[reportPrivateUsage]
+            bus_names,
+        )
 
     @property
     def of_all_global_constraints(
