@@ -189,22 +189,23 @@ class ComponentsPortal[T: Static | TimestampSnapshots | IntegerSnapshots](
     ) -> dict[str, T2]:
         static_df = self._get_pypsa_network_components(base_class).static
         if issubclass(base_class, BaseExtendableComponent):
-            field_name = f"{base_class.EXTENDABLE_COLUMN_PREFIX}_extendable"
-            static_df = cast(
-                pd.DataFrame,
-                static_df.loc[
-                    static_df[field_name] == base_class.model_fields[field_name].default
-                ],
-            )
-        committable = "committable"
-        if committable in static_df.columns:
-            static_df = cast(
-                pd.DataFrame,
-                static_df.loc[
-                    static_df[committable]
-                    == base_class.model_fields[committable].default
-                ],
-            )
+            extendable_field_name = f"{base_class.EXTENDABLE_COLUMN_PREFIX}_extendable"
+            extendable_field = base_class.model_fields[extendable_field_name]
+            if isinstance(
+                extendable_field.default, bool
+            ):  # I.e., not `PydanticUndefined`.
+                static_df = static_df.loc[
+                    static_df[extendable_field_name] == extendable_field.default
+                ]
+        committable_field_name = "committable"
+        if committable_field_name in static_df.columns:
+            committable_field = base_class.model_fields[committable_field_name]
+            if isinstance(
+                committable_field.default, bool
+            ):  # I.e., not `PydanticUndefined`.
+                static_df = static_df.loc[
+                    static_df[committable_field_name] == committable_field.default
+                ]
         component_dicts = {
             cast(str, name): dict(row) for name, row in static_df.iterrows()
         }
