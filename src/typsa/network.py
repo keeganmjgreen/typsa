@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 from collections.abc import Callable
+from copy import deepcopy
 from typing import Any, Sequence, assert_never, cast
 
 import pandas as pd
@@ -34,6 +35,7 @@ from typsa.components.transformer import (
     Transformer,
 )
 from typsa.results import (
+    Capacities,
     LinearPowerFlowContingencyResults,
     LinearPowerFlowDynamicResults,
     NonlinearPowerFlowDynamicResults,
@@ -52,8 +54,13 @@ from typsa.time_variation import (
 
 from .components._base_component import (
     BaseComponent,
+    BaseExtendableComponent,
     BusTiedComponentKeyed,
+    Capacity,
     ComponentKeyed,
+    ENom,
+    PNom,
+    SNom,
 )
 
 
@@ -613,6 +620,41 @@ class TopologyDeterminedNetwork[T: Static | TimestampSnapshots | IntegerSnapshot
 class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots = Static](
     _Simulatable[T], _SubNetworksAccessible[T]
 ):
+    @property
+    def all_capacities(self) -> Capacities:
+        """Access capacities for components, whether extendable or non-extendable
+        components.
+        """
+        capacities = deepcopy(self.static_results.capacities)
+        capacities.generators.all.update(
+            self._get_non_extendable_component_capacities(ExtendableGenerator, PNom)
+        )
+        capacities.lines.all.update(
+            self._get_non_extendable_component_capacities(ExtendableLine, SNom)
+        )
+        capacities.links.all.update(
+            self._get_non_extendable_component_capacities(ExtendableLink, PNom)
+        )
+        capacities.storage_units.all.update(
+            self._get_non_extendable_component_capacities(ExtendableStorageUnit, PNom)
+        )
+        capacities.stores.all.update(
+            self._get_non_extendable_component_capacities(ExtendableStore, ENom)
+        )
+        capacities.transformers.all.update(
+            self._get_non_extendable_component_capacities(ExtendableTransformer, SNom)
+        )
+        return capacities
+
+    def _get_non_extendable_component_capacities[T2: Capacity](
+        self, component_class: type[BaseExtendableComponent], capacity_class: type[T2]
+    ) -> dict[str, T2]:
+        return {
+            k: capacity_class(value=getattr(v, v.EXTENDABLE_COLUMN_PREFIX))
+            for k, v in self._get_components(component_class, component_class).items()
+            if not isinstance(v, ExtendableGenerator)
+        }
+
     @property
     def static_results(self) -> OptimizationStaticResults[T]:
         """Access static optimization results."""

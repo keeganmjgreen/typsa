@@ -55,15 +55,15 @@ class Capacity(BaseModel):
     value: float
 
 
-class PNomOpt(Capacity):
+class PNom(Capacity):
     pass
 
 
-class SNomOpt(Capacity):
+class SNom(Capacity):
     pass
 
 
-class ENomOpt(Capacity):
+class ENom(Capacity):
     pass
 
 

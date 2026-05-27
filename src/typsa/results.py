@@ -19,9 +19,9 @@ from .components._base_component import (
     BaseStaticResults,
     BusTied,
     Capacity,
-    ENomOpt,
-    PNomOpt,
-    SNomOpt,
+    ENom,
+    PNom,
+    SNom,
 )
 from .components.bus import (
     Bus,
@@ -32,7 +32,6 @@ from .components.bus import (
 from .components.generator import (
     BaseGenerator,
     CommittableGeneratorOptimizationDynamicResults,
-    ExtendableGenerator,
     GeneratorNonlinearPfDynamicResults,
     GeneratorOptimizationDynamicResults,
     GeneratorPfDynamicResults,
@@ -43,7 +42,6 @@ from .components.global_constraint import (
 )
 from .components.line import (
     BaseLine,
-    ExtendableLine,
     LineNonlinearPfDynamicResults,
     LineOptimizationDynamicResults,
     LineOptimizationStaticResults,
@@ -52,7 +50,6 @@ from .components.line import (
 from .components.link import (
     BaseLink,
     CommittableLinkOptimizationDynamicResults,
-    ExtendableLink,
     LinkNonlinearPfDynamicResults,
     LinkOptimizationDynamicResults,
     LinkPfDynamicResults,
@@ -72,21 +69,18 @@ from .components.shunt_impedance import (
 )
 from .components.storage_unit import (
     BaseStorageUnit,
-    ExtendableStorageUnit,
     StorageUnitNonlinearPfDynamicResults,
     StorageUnitOptimizationDynamicResults,
     StorageUnitPfDynamicResults,
 )
 from .components.store import (
     BaseStore,
-    ExtendableStore,
     StoreNonlinearPfDynamicResults,
     StoreOptimizationDynamicResults,
     StorePfDynamicResults,
 )
 from .components.transformer import (
     BaseTransformer,
-    ExtendableTransformer,
     TransformerNonlinearPfDynamicResults,
     TransformerOptimizationDynamicResults,
     TransformerOptimizationStaticResults,
@@ -96,12 +90,12 @@ from .components.transformer import (
 
 @dataclasses.dataclass
 class Capacities:
-    generators: BusTiedComponentKeyed[dict[str, PNomOpt]]
-    lines: ComponentKeyed[dict[str, SNomOpt]]
-    links: ComponentKeyed[dict[str, PNomOpt]]
-    storage_units: BusTiedComponentKeyed[dict[str, PNomOpt]]
-    stores: BusTiedComponentKeyed[dict[str, ENomOpt]]
-    transformers: ComponentKeyed[dict[str, SNomOpt]]
+    generators: BusTiedComponentKeyed[dict[str, PNom]]
+    lines: ComponentKeyed[dict[str, SNom]]
+    links: ComponentKeyed[dict[str, PNom]]
+    storage_units: BusTiedComponentKeyed[dict[str, PNom]]
+    stores: BusTiedComponentKeyed[dict[str, ENom]]
+    transformers: ComponentKeyed[dict[str, SNom]]
 
 
 @dataclasses.dataclass
@@ -114,17 +108,15 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
         bus_names = list(self._components_access.buses.all.keys())
         return Capacities(
             generators=self._get_bus_tied_component_capacities(
-                ExtendableGenerator, PNomOpt, bus_names
+                BaseGenerator, PNom, bus_names
             ),
-            lines=self._get_component_capacities(ExtendableLine, SNomOpt),
-            links=self._get_component_capacities(ExtendableLink, PNomOpt),
+            lines=self._get_component_capacities(BaseLine, SNom),
+            links=self._get_component_capacities(BaseLink, PNom),
             storage_units=self._get_bus_tied_component_capacities(
-                ExtendableStorageUnit, PNomOpt, bus_names
+                BaseStorageUnit, PNom, bus_names
             ),
-            stores=self._get_bus_tied_component_capacities(
-                ExtendableStore, ENomOpt, bus_names
-            ),
-            transformers=self._get_component_capacities(ExtendableTransformer, SNomOpt),
+            stores=self._get_bus_tied_component_capacities(BaseStore, ENom, bus_names),
+            transformers=self._get_component_capacities(BaseTransformer, SNom),
         )
 
     def _get_component_capacities[T2: Capacity](
