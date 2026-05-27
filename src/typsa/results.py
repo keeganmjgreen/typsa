@@ -8,8 +8,8 @@ import pandas as pd
 import pydantic
 from linopy.constants import SolverStatus, TerminationCondition
 
+from typsa._pypsa_network_derivative import ComponentsPortal
 from typsa.components._base_component import BusTiedComponentKeyed, ComponentKeyed
-from typsa.network import _ComponentsAccessible  # pyright: ignore[reportPrivateUsage]
 from typsa.time_variation import IntegerSnapshots, Static, TimestampSnapshots
 
 from .components._base_component import (
@@ -100,12 +100,12 @@ class Capacities:
 
 @dataclasses.dataclass
 class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshots]:
-    _components_access: _ComponentsAccessible[T]
+    _components_portal: ComponentsPortal[T]
 
     @property
     def capacities(self) -> Capacities:
         """Access optimized capacities for extendable components."""
-        bus_names = list(self._components_access.buses.all.keys())
+        bus_names = list(self._components_portal.buses.all.keys())
         return Capacities(
             generators=self._get_bus_tied_component_capacities(
                 BaseGenerator, PNom, bus_names
@@ -122,7 +122,7 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
     def _get_component_capacities[T2: Capacity](
         self, component_class: type[BaseExtendableComponent], capacity_class: type[T2]
     ) -> ComponentKeyed[dict[str, T2]]:
-        static_df = self._components_access._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
+        static_df = self._components_portal._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
             component_class
         ).static
         capacities = static_df.loc[
@@ -144,7 +144,7 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
     ) -> BusTiedComponentKeyed[dict[str, T2]]:
         return BusTiedComponentKeyed(
             self._get_component_capacities(component_class, capacity_class).all,
-            self._components_access._get_components(component_class, BusTied),  # pyright: ignore[reportPrivateUsage]
+            self._components_portal._get_components(component_class, BusTied),  # pyright: ignore[reportPrivateUsage]
             bus_names,
         )
 
@@ -183,8 +183,8 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
             self._get_static_results(
                 ShuntImpedance, ShuntImpedanceOptimizationStaticResults
             ),
-            self._components_access.shunt_impedances.all,
-            list(self._components_access.buses.all.keys()),
+            self._components_portal.shunt_impedances.all,
+            list(self._components_portal.buses.all.keys()),
         )
 
     def of_shunt_impedance(
@@ -220,7 +220,7 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
         static_results_class: type[T2],
         filter: Callable[[pd.DataFrame], pd.Series] | None = None,
     ) -> dict[str, T2]:
-        static_df = self._components_access._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
+        static_df = self._components_portal._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
             component_class
         ).static
         if filter is not None:
@@ -233,7 +233,7 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
 
 @dataclasses.dataclass
 class _BaseDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots]:
-    _components_access: _ComponentsAccessible[T]
+    _components_portal: ComponentsPortal[T]
 
     def _get_dynamic_results[T2: BaseDynamicResults](
         self,
@@ -241,12 +241,12 @@ class _BaseDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots]:
         dynamic_results_class: type[T2],
         filter: Callable[[pd.DataFrame], pd.Series] | None = None,
     ) -> T2:
-        static_df = self._components_access._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
+        static_df = self._components_portal._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
             component_class
         ).static
         dynamic_dfs = cast(
             dict[str, pd.DataFrame],
-            self._components_access._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
+            self._components_portal._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
                 component_class
             ).dynamic,
         )
@@ -262,8 +262,8 @@ class _BaseDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots]:
         fields = {
             field_name: BusTiedComponentKeyed(
                 df,
-                self._components_access._get_components(component_class, BusTied),  # pyright: ignore[reportPrivateUsage]
-                list(self._components_access.buses.all.keys()),
+                self._components_portal._get_components(component_class, BusTied),  # pyright: ignore[reportPrivateUsage]
+                list(self._components_portal.buses.all.keys()),
             )
             if issubclass(component_class, BusTied)
             else ComponentKeyed(df)
