@@ -109,8 +109,8 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
     _components_access: _ComponentsAccessible[T]
 
     @property
-    def all_capacities(self) -> Capacities:
-        """Access optimized capacities for all extendable components."""
+    def capacities(self) -> Capacities:
+        """Access optimized capacities for extendable components."""
         bus_names = list(self._components_access.buses.all.keys())
         return Capacities(
             generators=BusTiedComponentKeyed(
