@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Callable
 from typing import Literal, cast
 
@@ -7,8 +8,8 @@ import pandas as pd
 import pydantic
 from linopy.constants import SolverStatus, TerminationCondition
 
-from typsa._pypsa_network_derivative import PypsaNetworkDerivative
 from typsa.components._base_component import BusTiedComponentKeyed, ComponentKeyed
+from typsa.network import _ComponentsAccessible  # pyright: ignore[reportPrivateUsage]
 from typsa.time_variation import IntegerSnapshots, Static, TimestampSnapshots
 
 from .components._base_component import (
@@ -18,6 +19,9 @@ from .components._base_component import (
     BaseStaticResults,
     BusTied,
     Capacity,
+    ENomOpt,
+    PNomOpt,
+    SNomOpt,
 )
 from .components.bus import (
     Bus,
@@ -90,36 +94,65 @@ from .components.transformer import (
 )
 
 
-class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshots](
-    PypsaNetworkDerivative[T]
-):
-    @property
-    def all_capacities(self) -> dict[str, Capacity]:
-        """Access optimized capacities for all extendable components."""
-        extendable_component_classes: list[type[BaseExtendableComponent]] = [
-            ExtendableGenerator,
-            ExtendableLine,
-            ExtendableLink,
-            ExtendableStorageUnit,
-            ExtendableStore,
-            ExtendableTransformer,
-        ]
-        all_capacities: dict[str, Capacity] = {}
-        for component_class in extendable_component_classes:
-            static_df = self._get_pypsa_network_components(component_class).static
-            d = static_df.loc[
-                static_df[f"{component_class.EXTENDABLE_COLUMN_PREFIX}_extendable"],
-                f"{component_class.EXTENDABLE_COLUMN_PREFIX}_opt",
-            ].to_dict()
-            for component_name, capacity_value in d.items():
-                all_capacities[cast(str, component_name)] = (
-                    component_class.CAPACITY_TYPE(value=capacity_value)
-                )
-        return all_capacities
+@dataclasses.dataclass
+class Capacities:
+    generators: BusTiedComponentKeyed[dict[str, PNomOpt]]
+    lines: ComponentKeyed[dict[str, SNomOpt]]
+    links: ComponentKeyed[dict[str, PNomOpt]]
+    storage_units: BusTiedComponentKeyed[dict[str, PNomOpt]]
+    stores: BusTiedComponentKeyed[dict[str, ENomOpt]]
+    transformers: ComponentKeyed[dict[str, SNomOpt]]
 
-    def capacity_of(self, extendable_component: BaseExtendableComponent) -> Capacity:
-        """Access the optimized capacity for an extendable component."""
-        return self.all_capacities[extendable_component.name]
+
+@dataclasses.dataclass
+class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshots]:
+    _components_access: _ComponentsAccessible[T]
+
+    @property
+    def all_capacities(self) -> Capacities:
+        """Access optimized capacities for all extendable components."""
+        bus_names = list(self._components_access.buses.all.keys())
+        return Capacities(
+            generators=BusTiedComponentKeyed(
+                self._get_component_capacities(ExtendableGenerator, PNomOpt),
+                self._components_access.generators.all,
+                bus_names,
+            ),
+            lines=ComponentKeyed(
+                self._get_component_capacities(ExtendableLine, SNomOpt)
+            ),
+            links=ComponentKeyed(
+                self._get_component_capacities(ExtendableLink, PNomOpt)
+            ),
+            storage_units=BusTiedComponentKeyed(
+                self._get_component_capacities(ExtendableStorageUnit, PNomOpt),
+                self._components_access.storage_units.all,
+                bus_names,
+            ),
+            stores=BusTiedComponentKeyed(
+                self._get_component_capacities(ExtendableStore, ENomOpt),
+                self._components_access.stores.all,
+                bus_names,
+            ),
+            transformers=ComponentKeyed(
+                self._get_component_capacities(ExtendableTransformer, SNomOpt)
+            ),
+        )
+
+    def _get_component_capacities[T2: Capacity](
+        self, component_class: type[BaseExtendableComponent], capacity_class: type[T2]
+    ) -> dict[str, T2]:
+        static_df = self._components_access._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
+            component_class
+        ).static
+        capacities = static_df.loc[
+            static_df[f"{component_class.EXTENDABLE_COLUMN_PREFIX}_extendable"],
+            f"{component_class.EXTENDABLE_COLUMN_PREFIX}_opt",
+        ].to_dict()
+        return {
+            cast(str, component_name): capacity_class(value=capacity_value)
+            for component_name, capacity_value in capacities.items()
+        }
 
     @property
     def of_all_global_constraints(
@@ -156,8 +189,8 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
             self._get_static_results(
                 ShuntImpedance, ShuntImpedanceOptimizationStaticResults
             ),
-            self._get_components(ShuntImpedance, BusTied),
-            list(self._get_components(Bus, Bus[T]).keys()),
+            self._components_access.shunt_impedances.all,
+            list(self._components_access.buses.all.keys()),
         )
 
     def of_shunt_impedance(
@@ -193,7 +226,9 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
         static_results_class: type[T2],
         filter: Callable[[pd.DataFrame], pd.Series] | None = None,
     ) -> dict[str, T2]:
-        static_df = self._get_pypsa_network_components(component_class).static
+        static_df = self._components_access._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
+            component_class
+        ).static
         if filter is not None:
             static_df = static_df.loc[filter(static_df)]
         return {
@@ -202,19 +237,24 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
         }
 
 
-class _BaseDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots](
-    PypsaNetworkDerivative[T]
-):
+@dataclasses.dataclass
+class _BaseDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots]:
+    _components_access: _ComponentsAccessible[T]
+
     def _get_dynamic_results[T2: BaseDynamicResults](
         self,
         component_class: type[BaseComponent],
         dynamic_results_class: type[T2],
         filter: Callable[[pd.DataFrame], pd.Series] | None = None,
     ) -> T2:
-        static_df = self._get_pypsa_network_components(component_class).static
+        static_df = self._components_access._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
+            component_class
+        ).static
         dynamic_dfs = cast(
             dict[str, pd.DataFrame],
-            self._get_pypsa_network_components(component_class).dynamic,
+            self._components_access._get_pypsa_network_components(  # pyright: ignore[reportPrivateUsage]
+                component_class
+            ).dynamic,
         )
         if filter is not None:
             dynamic_dfs = {
@@ -228,8 +268,8 @@ class _BaseDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots](
         fields = {
             field_name: BusTiedComponentKeyed(
                 df,
-                self._get_components(component_class, BusTied),
-                list(self._get_components(Bus, Bus[T]).keys()),
+                self._components_access._get_components(component_class, BusTied),  # pyright: ignore[reportPrivateUsage]
+                list(self._components_access.buses.all.keys()),
             )
             if issubclass(component_class, BusTied)
             else ComponentKeyed(df)
@@ -356,6 +396,11 @@ class OptimizationInfo(pydantic.BaseModel):
     termination_condition: TerminationCondition
     objective_value: float | None
     objective_constant: float
+
+    @property
+    def total_system_cost(self) -> float | None:
+        if self.objective_value is not None:
+            return self.objective_value + self.objective_constant
 
 
 class LinearPowerFlowDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots](

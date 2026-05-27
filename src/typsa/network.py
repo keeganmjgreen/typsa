@@ -419,8 +419,8 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
             ),
             skip_pre=skip_pre,
         )
-        lpf_dynamic_results = LinearPowerFlowDynamicResults[T](
-            self._pypsa_network, self._snapshots_class
+        lpf_dynamic_results = LinearPowerFlowDynamicResults(
+            ComponentsPortal(pypsa_network_copy, self._snapshots_class)
         )
         pf_info = PowerFlowInfo.model_validate(info)
         return lpf_dynamic_results, pf_info
@@ -450,8 +450,8 @@ class _Simulatable[T: Static | TimestampSnapshots | IntegerSnapshots](
             distribute_slack=distribute_slack,
             slack_weights=slack_weights,
         )
-        pf_dynamic_results = NonlinearPowerFlowDynamicResults[T](
-            self._pypsa_network, self._snapshots_class
+        pf_dynamic_results = NonlinearPowerFlowDynamicResults(
+            ComponentsPortal(pypsa_network_copy, self._snapshots_class)
         )
         pf_info = PowerFlowInfo.model_validate(info)
         return pf_dynamic_results, pf_info
@@ -616,9 +616,9 @@ class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots = Stati
     @property
     def static_results(self) -> OptimizationStaticResults[T]:
         """Access static optimization results."""
-        return OptimizationStaticResults(self._pypsa_network, self._snapshots_class)
+        return OptimizationStaticResults(self)
 
     @property
     def dynamic_results(self) -> OptimizationDynamicResults[T]:
         """Access dynamic optimization results."""
-        return OptimizationDynamicResults(self._pypsa_network, self._snapshots_class)
+        return OptimizationDynamicResults(self)

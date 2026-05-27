@@ -70,28 +70,24 @@ class ENomOpt(Capacity):
 class BaseExtendableComponent[
     T: Static | TimestampSnapshots | IntegerSnapshots = Static
 ](BaseComponent[T]):
-    CAPACITY_TYPE: ClassVar[type[Capacity]]
     EXTENDABLE_COLUMN_PREFIX: ClassVar[str]
 
 
 class PNomExtendableComponent[
     T: Static | TimestampSnapshots | IntegerSnapshots = Static
 ](BaseExtendableComponent[T]):
-    CAPACITY_TYPE: ClassVar = PNomOpt
     EXTENDABLE_COLUMN_PREFIX = "p_nom"
 
 
 class SNomExtendableComponent[
     T: Static | TimestampSnapshots | IntegerSnapshots = Static
 ](BaseExtendableComponent[T]):
-    CAPACITY_TYPE: ClassVar = SNomOpt
     EXTENDABLE_COLUMN_PREFIX = "s_nom"
 
 
 class ENomExtendableComponent[
     T: Static | TimestampSnapshots | IntegerSnapshots = Static
 ](BaseExtendableComponent[T]):
-    CAPACITY_TYPE: ClassVar = ENomOpt
     EXTENDABLE_COLUMN_PREFIX = "e_nom"
 
 
