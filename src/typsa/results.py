@@ -131,7 +131,7 @@ class OptimizationStaticResults[T: Static | TimestampSnapshots | IntegerSnapshot
         ].to_dict()
         return ComponentKeyed(
             {
-                cast(str, component_name): capacity_class(value=capacity_value)
+                cast(str, component_name): capacity_class(capacity_value)
                 for component_name, capacity_value in capacities.items()
             }
         )

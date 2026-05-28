@@ -12,15 +12,14 @@ from linopy.constants import SolverStatus, TerminationCondition
 
 from typsa._pypsa_network_derivative import ComponentsPortal, PypsaNetworkDerivative
 from typsa.components.bus import Bus, BusControl, SlackBusControl
-from typsa.components.generator import ExtendableGenerator
-from typsa.components.line import BaseLine, ExtendableLine, Line
-from typsa.components.link import ExtendableLink
-from typsa.components.storage_unit import ExtendableStorageUnit
-from typsa.components.store import ExtendableStore
+from typsa.components.generator import Generator
+from typsa.components.line import BaseLine, Line
+from typsa.components.link import Link
+from typsa.components.storage_unit import StorageUnit
+from typsa.components.store import Store
 from typsa.components.sub_network import SubNetwork
 from typsa.components.transformer import (
     BaseTransformer,
-    ExtendableTransformer,
     Transformer,
 )
 from typsa.results import (
@@ -512,22 +511,22 @@ class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots = Stati
         """
         capacities = deepcopy(self.static_results.capacities)
         capacities.generators.all.update(
-            self._get_non_extendable_component_capacities(ExtendableGenerator, PNom)
+            self._get_non_extendable_component_capacities(Generator, PNom)
         )
         capacities.lines.all.update(
-            self._get_non_extendable_component_capacities(ExtendableLine, SNom)
+            self._get_non_extendable_component_capacities(Line, SNom)
         )
         capacities.links.all.update(
-            self._get_non_extendable_component_capacities(ExtendableLink, PNom)
+            self._get_non_extendable_component_capacities(Link, PNom)
         )
         capacities.storage_units.all.update(
-            self._get_non_extendable_component_capacities(ExtendableStorageUnit, PNom)
+            self._get_non_extendable_component_capacities(StorageUnit, PNom)
         )
         capacities.stores.all.update(
-            self._get_non_extendable_component_capacities(ExtendableStore, ENom)
+            self._get_non_extendable_component_capacities(Store, ENom)
         )
         capacities.transformers.all.update(
-            self._get_non_extendable_component_capacities(ExtendableTransformer, SNom)
+            self._get_non_extendable_component_capacities(Transformer, SNom)
         )
         return capacities
 
@@ -535,9 +534,9 @@ class OptimizedNetwork[T: Static | TimestampSnapshots | IntegerSnapshots = Stati
         self, component_class: type[BaseExtendableComponent], capacity_class: type[T2]
     ) -> dict[str, T2]:
         return {
-            k: capacity_class(value=getattr(v, v.EXTENDABLE_COLUMN_PREFIX))
+            k: capacity_class(getattr(v, v.EXTENDABLE_COLUMN_PREFIX))
             for k, v in self._get_components(component_class, component_class).items()
-            if not isinstance(v, ExtendableGenerator)
+            if not getattr(v, f"{v.EXTENDABLE_COLUMN_PREFIX}_extendable")
         }
 
     @property

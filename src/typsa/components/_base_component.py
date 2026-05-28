@@ -51,8 +51,8 @@ class BusTiedComponentKeyed[T: dict[str, Any] | pd.DataFrame](ComponentKeyed[T])
         }
 
 
-class Capacity(BaseModel):
-    value: float
+class Capacity(float):
+    pass
 
 
 class PNom(Capacity):
