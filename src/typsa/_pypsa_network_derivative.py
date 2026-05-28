@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import cast
+from typing import Any, cast
 
 import pandas as pd
 import pydantic
@@ -206,9 +206,7 @@ class ComponentsPortal[T: Static | TimestampSnapshots | IntegerSnapshots](
                 static_df = static_df.loc[
                     static_df[committable_field_name] == committable_field.default
                 ]
-        component_dicts = {
-            cast(str, name): dict(row) for name, row in static_df.iterrows()
-        }
+        component_dicts = cast(dict[str, dict[str, Any]], static_df.to_dict("index"))
         dynamic_dfs = cast(
             dict[str, pd.DataFrame],
             self._get_pypsa_network_components(base_class).dynamic,
