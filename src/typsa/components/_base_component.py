@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, ClassVar, Mapping
+from typing import Any, ClassVar, Mapping, cast
 
 import pandas as pd
 import pydantic
@@ -44,8 +44,11 @@ class BusTiedComponentKeyed[T: dict[str, Any] | pd.DataFrame](ComponentKeyed[T])
     @property
     def grouped_by_bus(self) -> dict[str, T]:
         return {
-            bus_name: type(self.all)(
-                {cn: self.all[cn] for cn in component_names if cn in self.all}
+            bus_name: cast(
+                T,
+                self.all[[cn for cn in component_names if cn in self.all.columns]]
+                if isinstance(self.all, pd.DataFrame)
+                else {cn: self.all[cn] for cn in component_names if cn in self.all},
             )
             for bus_name, component_names in self._components_by_bus.items()
         }
