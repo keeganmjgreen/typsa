@@ -259,16 +259,19 @@ class _BaseDynamicResults[T: Static | TimestampSnapshots | IntegerSnapshots]:
                 ]
                 for field_name in dynamic_results_class.model_fields
             }
-        fields = {
-            field_name: BusTiedComponentKeyed(
-                df,
-                self._components_portal._get_components(component_class, BusTied),  # pyright: ignore[reportPrivateUsage]
-                list(self._components_portal.buses.all.keys()),
+        if issubclass(component_class, BusTied):
+            components = self._components_portal._get_components(  # pyright: ignore[reportPrivateUsage]
+                component_class, BusTied
             )
-            if issubclass(component_class, BusTied)
-            else ComponentKeyed(df)
-            for field_name, df in dynamic_dfs.items()
-        }
+            bus_names = list(self._components_portal.buses.all.keys())
+            fields = {
+                field_name: BusTiedComponentKeyed(df, components, bus_names)
+                for field_name, df in dynamic_dfs.items()
+            }
+        else:
+            fields = {
+                field_name: ComponentKeyed(df) for field_name, df in dynamic_dfs.items()
+            }
         return dynamic_results_class.model_validate(fields)
 
 
